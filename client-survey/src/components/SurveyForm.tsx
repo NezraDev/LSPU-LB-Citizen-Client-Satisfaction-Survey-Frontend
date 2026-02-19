@@ -45,7 +45,7 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office }) => {
             timeIn={formData.timeIn}
             timeOut={formData.timeOut}
             onTicketCodeChange={(val) => handleChange("ticketCode", val)}
-            error={errors.ticketCode} // pass the error message
+            error={errors.ticketCode}
           />
 
           <PersonalInfo
@@ -89,6 +89,7 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office }) => {
           )}
 
           <SubmitButton submitting={submitting} />
+          {/* Modal Logic*/}
         </form>
       </div>
     </div>

@@ -80,7 +80,6 @@ export const useSurveyForm = (office: Office) => {
         return newData;
       });
 
-      // Clear the specific field error when user starts typing
       setErrors((prev) => {
         const updated = { ...prev };
         if (field === "cc1") {
@@ -148,6 +147,8 @@ export const useSurveyForm = (office: Office) => {
     setErrors((prev) => ({ ...prev, services: undefined }));
   }, []);
 
+  // Modal Logic
+
   const handleSubmit = async () => {
     setSubmitError(null);
     const validationErrors = validateSurveyForm(formData);
@@ -158,7 +159,7 @@ export const useSurveyForm = (office: Office) => {
       validationErrors.cc2 ||
       validationErrors.cc3 ||
       validationErrors.services ||
-      validationErrors.ticketCode; // include ticketCode
+      validationErrors.ticketCode;
 
     if (hasErrors) {
       setErrors(validationErrors);
@@ -173,7 +174,6 @@ export const useSurveyForm = (office: Office) => {
         submittedAt: new Date().toISOString(),
       });
       alert("Thank you for your feedback!");
-      // Optionally reset form
     } catch (error) {
       setSubmitError("Submission failed, please try again");
       console.error(error);
