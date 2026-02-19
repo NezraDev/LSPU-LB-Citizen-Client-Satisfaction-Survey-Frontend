@@ -1,16 +1,19 @@
+import React from "react";
 import type { Service } from "../types/survey.type";
 
 interface ServicesAttainedProps {
   services: Service[];
   selectedServices: string[];
   onToggle: (serviceName: string) => void;
+  error?: string;
 }
 
-export default function ServicesAttained({
+export const ServicesAttained: React.FC<ServicesAttainedProps> = ({
   services,
   selectedServices,
   onToggle,
-}: ServicesAttainedProps) {
+  error,
+}) => {
   return (
     <fieldset className="border border-gray-300 rounded-md p-4">
       <legend className="text-sm sm:text-md font-medium text-gray-700 px-3 sm:px-4 py-1 bg-gray-100 border border-gray-300 rounded-md">
@@ -33,6 +36,7 @@ export default function ServicesAttained({
           </label>
         ))}
       </div>
+      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
     </fieldset>
   );
-}
+};

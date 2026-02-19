@@ -1,3 +1,5 @@
+import React from "react";
+
 interface CitizenCharterProps {
   cc1: string;
   cc2: string;
@@ -5,13 +7,18 @@ interface CitizenCharterProps {
   onCC1Change: (value: string) => void;
   onCC2Change: (value: string) => void;
   onCC3Change: (value: string) => void;
+  errors?: {
+    cc1?: string;
+    cc2?: string;
+    cc3?: string;
+  };
 }
 
 const CC1_OPTIONS = [
   "I know what a CC is and I saw this office’s CC.",
   "I know what a CC is but I did NOT see this office’s CC.",
   "I learned of the CC only when I saw this office’s CC.",
-  "I do not know what a CC is and I did not see one in this office. ",
+  "I do not know what a CC is and I did not see one in this office.",
 ];
 
 const CC2_OPTIONS = [
@@ -21,6 +28,7 @@ const CC2_OPTIONS = [
   "Not visible at all",
   "N/A",
 ];
+
 const CC3_OPTIONS = [
   "Helped very much",
   "Somewhat helped",
@@ -28,14 +36,15 @@ const CC3_OPTIONS = [
   "N/A",
 ];
 
-export default function CitizenCharter({
+export const CitizenCharter: React.FC<CitizenCharterProps> = ({
   cc1,
   cc2,
   cc3,
   onCC1Change,
   onCC2Change,
   onCC3Change,
-}: CitizenCharterProps) {
+  errors = {},
+}) => {
   const showCC2_3 = cc1 && cc1 !== CC1_OPTIONS[3];
 
   return (
@@ -62,6 +71,9 @@ export default function CitizenCharter({
             </label>
           ))}
         </div>
+        {errors.cc1 && (
+          <p className="text-red-500 text-sm mt-1">{errors.cc1}</p>
+        )}
       </div>
 
       {showCC2_3 && (
@@ -84,6 +96,9 @@ export default function CitizenCharter({
                 </label>
               ))}
             </div>
+            {errors.cc2 && (
+              <p className="text-red-500 text-sm mt-1">{errors.cc2}</p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -104,9 +119,12 @@ export default function CitizenCharter({
                 </label>
               ))}
             </div>
+            {errors.cc3 && (
+              <p className="text-red-500 text-sm mt-1">{errors.cc3}</p>
+            )}
           </div>
         </>
       )}
     </fieldset>
   );
-}
+};

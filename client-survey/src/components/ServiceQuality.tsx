@@ -1,3 +1,4 @@
+import React from "react";
 import type {
   ServiceQuality as ServiceQualityType,
   Rating,
@@ -9,6 +10,7 @@ interface ServiceQualityProps {
     field: K,
     value: Rating,
   ) => void;
+  errors?: Partial<Record<keyof ServiceQualityType, string>>;
 }
 
 const dimensions: { name: keyof ServiceQualityType; label: string }[] = [
@@ -59,10 +61,11 @@ const dimensions: { name: keyof ServiceQualityType; label: string }[] = [
 
 const ratingValues: Rating[] = [5, 4, 3, 2, 1, "N/A"];
 
-export default function ServiceQuality({
+export const ServiceQuality: React.FC<ServiceQualityProps> = ({
   data,
   onChange,
-}: ServiceQualityProps) {
+  errors = {},
+}) => {
   return (
     <fieldset className="w-full border border-gray-300 rounded-md p-2 sm:p-4">
       <legend className="text-sm sm:text-md font-medium text-gray-700 px-3 sm:px-4 py-1 bg-gray-100 border border-gray-300 rounded-md">
@@ -116,6 +119,11 @@ export default function ServiceQuality({
               <tr key={dim.name}>
                 <td className="px-2 sm:px-4 py-1 sm:py-2 text-gray-700 sticky left-0 bg-white text-[0.7rem] xs:text-xs sm:text-sm">
                   {dim.label}
+                  {errors[dim.name] && (
+                    <span className="ml-2 text-red-500 text-xs">
+                      * Required
+                    </span>
+                  )}
                 </td>
                 {ratingValues.map((value) => (
                   <td
@@ -135,7 +143,12 @@ export default function ServiceQuality({
             ))}
           </tbody>
         </table>
+        {Object.keys(errors).length > 0 && (
+          <p className="text-red-500 text-sm mt-2">
+            Please rate all service quality dimensions.
+          </p>
+        )}
       </div>
     </fieldset>
   );
-}
+};

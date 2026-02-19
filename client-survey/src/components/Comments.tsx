@@ -1,9 +1,11 @@
+import React from "react";
+
 interface CommentsProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-export default function Comments({ value, onChange }: CommentsProps) {
+export const Comments: React.FC<CommentsProps> = ({ value, onChange }) => {
   return (
     <fieldset className="border border-gray-300 rounded-md p-4">
       <legend className="text-sm sm:text-md font-medium text-gray-700 px-3 sm:px-4 py-1 bg-gray-100 border border-gray-300 rounded-md">
@@ -18,4 +20,4 @@ export default function Comments({ value, onChange }: CommentsProps) {
       />
     </fieldset>
   );
-}
+};

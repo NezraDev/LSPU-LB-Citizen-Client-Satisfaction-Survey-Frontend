@@ -1,3 +1,4 @@
+import React from "react";
 import type {
   PersonalInfo as PersonalInfoType,
   ClientType,
@@ -9,6 +10,7 @@ interface PersonalInfoProps {
     field: K,
     value: PersonalInfoType[K],
   ) => void;
+  errors?: Partial<Record<keyof PersonalInfoType, string>>;
 }
 
 const GENDER_OPTIONS = ["Male", "Female", "Other"] as const;
@@ -46,11 +48,16 @@ const COURSE_OPTIONS = [
 ];
 const YEAR_LEVEL_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
 
-export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
+export const PersonalInfo: React.FC<PersonalInfoProps> = ({
+  data,
+  onChange,
+  errors = {},
+}) => {
   const inputClasses =
     "mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50";
   const selectClasses =
     "mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50";
+  const errorClass = "border-red-500";
 
   return (
     <fieldset className="border border-gray-300 rounded-md p-4">
@@ -63,11 +70,11 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
             Client Type
           </label>
           <select
-            value={data.clientType}
+            value={data.clientType || ""}
             onChange={(e) =>
               onChange("clientType", e.target.value as ClientType)
             }
-            className={selectClasses}
+            className={`${selectClasses} ${errors.clientType ? errorClass : ""}`}
           >
             <option value="">Select Client Type</option>
             {CLIENT_TYPE_OPTIONS.map((opt) => (
@@ -76,6 +83,9 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
               </option>
             ))}
           </select>
+          {errors.clientType && (
+            <p className="text-red-500 text-sm mt-1">{errors.clientType}</p>
+          )}
         </div>
 
         <div>
@@ -94,10 +104,19 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
           <label className="block text-sm font-medium text-gray-700">Age</label>
           <input
             type="number"
-            value={data.age || ""}
-            onChange={(e) => onChange("age", parseInt(e.target.value) || 0)}
-            className={inputClasses}
+            min={0}
+            value={data.age ?? ""}
+            onChange={(e) =>
+              onChange(
+                "age",
+                e.target.value ? parseInt(e.target.value) : undefined,
+              )
+            }
+            className={`${inputClasses} ${errors.age ? errorClass : ""}`}
           />
+          {errors.age && (
+            <p className="text-red-500 text-sm mt-1">{errors.age}</p>
+          )}
         </div>
 
         <div>
@@ -105,9 +124,9 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
             Gender
           </label>
           <select
-            value={data.gender}
-            onChange={(e) => onChange("gender", e.target.value as any)}
-            className={selectClasses}
+            value={data.gender || ""}
+            onChange={(e) => onChange("gender", e.target.value)}
+            className={`${selectClasses} ${errors.gender ? errorClass : ""}`}
           >
             <option value="">Select Gender</option>
             {GENDER_OPTIONS.map((opt) => (
@@ -116,6 +135,9 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
               </option>
             ))}
           </select>
+          {errors.gender && (
+            <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
+          )}
         </div>
 
         <div>
@@ -123,9 +145,9 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
             Civil Status
           </label>
           <select
-            value={data.civilStatus}
-            onChange={(e) => onChange("civilStatus", e.target.value as any)}
-            className={selectClasses}
+            value={data.civilStatus || ""}
+            onChange={(e) => onChange("civilStatus", e.target.value)}
+            className={`${selectClasses} ${errors.civilStatus ? errorClass : ""}`}
           >
             <option value="">Select Civil Status</option>
             {CIVIL_STATUS_OPTIONS.map((opt) => (
@@ -134,6 +156,9 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
               </option>
             ))}
           </select>
+          {errors.civilStatus && (
+            <p className="text-red-500 text-sm mt-1">{errors.civilStatus}</p>
+          )}
         </div>
 
         <div>
@@ -144,8 +169,11 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
             type="text"
             value={data.residence}
             onChange={(e) => onChange("residence", e.target.value)}
-            className={inputClasses}
+            className={`${inputClasses} ${errors.residence ? errorClass : ""}`}
           />
+          {errors.residence && (
+            <p className="text-red-500 text-sm mt-1">{errors.residence}</p>
+          )}
         </div>
 
         {data.clientType === "Student" && (
@@ -157,7 +185,7 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
               <select
                 value={data.course || ""}
                 onChange={(e) => onChange("course", e.target.value)}
-                className={selectClasses}
+                className={`${selectClasses} ${errors.course ? errorClass : ""}`}
               >
                 <option value="">Select Course</option>
                 {COURSE_OPTIONS.map((opt) => (
@@ -166,6 +194,9 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
                   </option>
                 ))}
               </select>
+              {errors.course && (
+                <p className="text-red-500 text-sm mt-1">{errors.course}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -174,7 +205,7 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
               <select
                 value={data.yearLevel || ""}
                 onChange={(e) => onChange("yearLevel", e.target.value)}
-                className={selectClasses}
+                className={`${selectClasses} ${errors.yearLevel ? errorClass : ""}`}
               >
                 <option value="">Select Year Level</option>
                 {YEAR_LEVEL_OPTIONS.map((opt) => (
@@ -183,6 +214,9 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
                   </option>
                 ))}
               </select>
+              {errors.yearLevel && (
+                <p className="text-red-500 text-sm mt-1">{errors.yearLevel}</p>
+              )}
             </div>
           </>
         )}
@@ -197,11 +231,14 @@ export default function PersonalInfo({ data, onChange }: PersonalInfoProps) {
               type="text"
               value={data.occupation || ""}
               onChange={(e) => onChange("occupation", e.target.value)}
-              className={inputClasses}
+              className={`${inputClasses} ${errors.occupation ? errorClass : ""}`}
             />
+            {errors.occupation && (
+              <p className="text-red-500 text-sm mt-1">{errors.occupation}</p>
+            )}
           </div>
         )}
       </div>
     </fieldset>
   );
-}
+};

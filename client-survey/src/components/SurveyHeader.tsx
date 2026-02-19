@@ -1,8 +1,10 @@
+import React from "react";
+
 interface SurveyHeaderProps {
   officeName: string;
 }
 
-export default function SurveyHeader({ officeName }: SurveyHeaderProps) {
+export const SurveyHeader: React.FC<SurveyHeaderProps> = ({ officeName }) => {
   return (
     <header className="mb-6 sm:mb-8">
       <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-600 border-b-2 border-yellow-400 pb-2">
@@ -16,4 +18,4 @@ export default function SurveyHeader({ officeName }: SurveyHeaderProps) {
       </p>
     </header>
   );
-}
+};

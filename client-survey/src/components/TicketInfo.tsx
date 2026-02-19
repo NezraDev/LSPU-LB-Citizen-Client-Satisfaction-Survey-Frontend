@@ -1,33 +1,44 @@
+import React from "react";
+
 interface TicketInfoProps {
   ticketCode: string;
   date: string;
   timeIn: string;
   timeOut: string;
   onTicketCodeChange: (value: string) => void;
+  error?: string; // error message for ticket code
 }
 
-export default function TicketInfo({
+const TicketInfo: React.FC<TicketInfoProps> = ({
   ticketCode,
   date,
   timeIn,
   timeOut,
   onTicketCodeChange,
-}: TicketInfoProps) {
+  error,
+}) => {
+  // Dynamic input class – add red border if error exists
+  const inputClasses = `mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50 ${
+    error ? "border-red-500" : "border-gray-300"
+  }`;
+
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Ticket Code
+            Ticket Code <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={ticketCode}
             onChange={(e) => onTicketCodeChange(e.target.value)}
             maxLength={6}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50"
+            className={inputClasses}
             placeholder="Enter 6‑digit code"
           />
+          {/* Error message displayed directly below input */}
+          {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">
@@ -68,4 +79,6 @@ export default function TicketInfo({
       </div>
     </>
   );
-}
+};
+
+export default TicketInfo;

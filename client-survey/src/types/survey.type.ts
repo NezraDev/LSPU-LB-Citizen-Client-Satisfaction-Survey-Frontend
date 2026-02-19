@@ -1,25 +1,28 @@
-export type Gender = "Male" | "Female" | "Other";
-export type CivilStatus =
-  | "Single"
-  | "Married"
-  | "Divorced"
-  | "Separated"
-  | "Widowed";
 export type ClientType = "General Public" | "Student" | "Government Employee";
+
+export type Rating = 5 | 4 | 3 | 2 | 1 | "N/A";
+
+export interface Service {
+  name: string;
+}
+
+export interface Office {
+  id: string;
+  name: string;
+  services: Service[];
+}
 
 export interface PersonalInfo {
   name?: string;
   age?: number;
-  gender?: Gender;
-  civilStatus?: CivilStatus;
-  residence?: string;
+  gender?: string;
+  civilStatus?: string;
+  residence: string;
   course?: string;
   yearLevel?: string;
   occupation?: string;
   clientType?: ClientType;
 }
-
-export type Rating = 5 | 4 | 3 | 2 | 1 | "N/A";
 
 export interface ServiceQuality {
   satisfaction?: Rating;
@@ -33,28 +36,27 @@ export interface ServiceQuality {
   outcome?: Rating;
 }
 
-export interface Service {
-  name: string;
-  category: "internal" | "external" | "internal/external";
-}
-
 export interface SurveyFormData {
   date: string;
   ticketCode: string;
   timeIn: string;
   timeOut: string;
+  officeId: string;
   personalInfo: PersonalInfo;
   cc1: string;
-  cc2?: string;
-  cc3?: string;
+  cc2: string;
+  cc3: string;
   services: string[];
   quality: ServiceQuality;
   comments?: string;
-  officeId: string;
 }
 
-export interface Office {
-  id: string;
-  name: string;
-  services: Service[];
+export interface FormErrors {
+  personalInfo: Partial<Record<keyof PersonalInfo, string>>;
+  quality: Partial<Record<keyof ServiceQuality, string>>;
+  cc1?: string;
+  cc2?: string;
+  cc3?: string;
+  services?: string;
+  ticketCode?: string;
 }
