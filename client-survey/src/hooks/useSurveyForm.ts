@@ -60,7 +60,11 @@ export const useSurveyForm = (office: Office) => {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [isErrorOpen, setIsErrorOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("The ticket code you entered has expired or is no longer valid. Please check the code and try again.");
+  const [errorMessage, setErrorMessage] = useState(
+    "The ticket code you entered has expired or is no longer valid. Please check the code and try again.",
+  );
+
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -69,6 +73,7 @@ export const useSurveyForm = (office: Office) => {
         timeOut: formatTime12Hour(new Date()),
       }));
     }, 1000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -76,15 +81,18 @@ export const useSurveyForm = (office: Office) => {
     <K extends keyof SurveyFormData>(field: K, value: SurveyFormData[K]) => {
       setFormData((prev) => {
         const newData = { ...prev, [field]: value };
+
         if (field === "cc1" && value === CC1_OPTION_NA) {
           newData.cc2 = "N/A";
           newData.cc3 = "N/A";
         }
+
         return newData;
       });
 
       setErrors((prev) => {
         const updated = { ...prev };
+
         if (field === "cc1") {
           updated.cc1 = undefined;
           updated.cc2 = undefined;
@@ -93,6 +101,7 @@ export const useSurveyForm = (office: Office) => {
         } else if (field === "ticketCode") {
           updated.ticketCode = undefined;
         }
+
         return updated;
       });
     },
@@ -105,6 +114,7 @@ export const useSurveyForm = (office: Office) => {
         ...prev,
         personalInfo: { ...prev.personalInfo, [field]: value },
       }));
+
       setErrors((prev) => ({
         ...prev,
         personalInfo: { ...prev.personalInfo, [field]: undefined },
@@ -131,6 +141,7 @@ export const useSurveyForm = (office: Office) => {
         ...prev,
         quality: { ...prev.quality, [field]: value },
       }));
+
       setErrors((prev) => ({
         ...prev,
         quality: { ...prev.quality, [field]: undefined },
@@ -145,15 +156,16 @@ export const useSurveyForm = (office: Office) => {
       const newServices = alreadySelected
         ? prev.services.filter((s) => s !== service)
         : [...prev.services, service];
+
       return { ...prev, services: newServices };
     });
+
     setErrors((prev) => ({ ...prev, services: undefined }));
   }, []);
 
-  // Modal Logic
-
   const handleSubmit = async () => {
     setSubmitError(null);
+
     const validationErrors = validateSurveyForm(formData);
     const hasErrors =
       Object.keys(validationErrors.personalInfo).length > 0 ||
@@ -166,22 +178,27 @@ export const useSurveyForm = (office: Office) => {
 
     if (hasErrors) {
       setErrors(validationErrors);
-      
+
       if (validationErrors.ticketCode) {
+        setErrorMessage(
+          "The ticket code you entered has expired or is no longer valid. Please check the code and try again.",
+        );
         setIsErrorOpen(true);
       }
-      
+
       return;
     }
 
     setSubmitting(true);
+
     try {
       await submitSurvey({
         ...formData,
         officeName: office.name,
         submittedAt: new Date().toISOString(),
       });
-      alert("Thank you for your feedback!");
+
+      setIsSuccessOpen(true);
     } catch (error) {
       setSubmitError("Submission failed, please try again");
       console.error(error);
@@ -204,5 +221,7 @@ export const useSurveyForm = (office: Office) => {
     setIsErrorOpen,
     errorMessage,
     setErrorMessage,
+    isSuccessOpen,
+    setIsSuccessOpen,
   };
 };
