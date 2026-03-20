@@ -168,14 +168,18 @@ export const useSurveyForm = (office: Office) => {
 
     setSubmitting(true);
     try {
-      await submitSurvey({
-        ...formData,
-        officeName: office.name,
-        submittedAt: new Date().toISOString(),
-      });
+      if (!office.questionIds || !office.questions) {
+        throw new Error("Survey configuration is unavailable for this office.");
+      }
+
+      await submitSurvey(formData, office.questionIds, office.questions);
       alert("Thank you for your feedback!");
     } catch (error) {
-      setSubmitError("Submission failed, please try again");
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Submission failed, please try again",
+      );
       console.error(error);
     } finally {
       setSubmitting(false);

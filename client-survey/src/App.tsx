@@ -4,7 +4,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/survey/:officeId" element={<SurveyPage />} />
+        <Route path="/survey/:qrToken" element={<SurveyPage />} />
         <Route
           path="/"
           element={

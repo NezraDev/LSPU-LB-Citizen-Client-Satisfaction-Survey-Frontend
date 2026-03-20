@@ -15,9 +15,9 @@ interface CitizenCharterProps {
 }
 
 const CC1_OPTIONS = [
-  "I know what a CC is and I saw this office’s CC.",
-  "I know what a CC is but I did NOT see this office’s CC.",
-  "I learned of the CC only when I saw this office’s CC.",
+  "I know what a CC is and I saw this office's CC.",
+  "I know what a CC is but I did NOT see this office's CC.",
+  "I learned of the CC only when I saw this office's CC.",
   "I do not know what a CC is and I did not see one in this office.",
 ];
 
