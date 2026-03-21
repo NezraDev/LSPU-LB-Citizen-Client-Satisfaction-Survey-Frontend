@@ -59,6 +59,9 @@ export const useSurveyForm = (office: Office) => {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const [isErrorOpen, setIsErrorOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("The ticket code you entered has expired or is no longer valid. Please check the code and try again.");
+
   useEffect(() => {
     const interval = setInterval(() => {
       setFormData((prev) => ({
@@ -163,6 +166,11 @@ export const useSurveyForm = (office: Office) => {
 
     if (hasErrors) {
       setErrors(validationErrors);
+      
+      if (validationErrors.ticketCode) {
+        setIsErrorOpen(true);
+      }
+      
       return;
     }
 
@@ -192,5 +200,9 @@ export const useSurveyForm = (office: Office) => {
     handleQualityChange,
     toggleService,
     handleSubmit,
+    isErrorOpen,
+    setIsErrorOpen,
+    errorMessage,
+    setErrorMessage,
   };
 };

@@ -9,6 +9,7 @@ import { ServicesAttained } from "./ServicesAttained";
 import { ServiceQuality } from "./ServiceQuality";
 import { Comments } from "./Comments";
 import { SubmitButton } from "./SubmitButton";
+import ErrorModal from "./ErrorModal";
 
 interface SurveyFormProps {
   office: Office;
@@ -25,6 +26,9 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office }) => {
     handleQualityChange,
     toggleService,
     handleSubmit,
+    isErrorOpen,
+    setIsErrorOpen,
+    errorMessage,
   } = useSurveyForm(office);
 
   return (
@@ -91,6 +95,13 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office }) => {
           <SubmitButton submitting={submitting} />
           {/* Modal Logic*/}
         </form>
+
+        {/* Error Modal */}
+        <ErrorModal
+          isOpen={isErrorOpen}
+          message={errorMessage} 
+          onClose={() => setIsErrorOpen(false)}
+        />
       </div>
     </div>
   );
