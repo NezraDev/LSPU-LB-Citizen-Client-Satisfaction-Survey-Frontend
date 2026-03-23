@@ -48,7 +48,7 @@ const getInitialFormData = (officeId: string): SurveyFormData => {
   };
 };
 
-export const useSurveyForm = (office: Office) => {
+export const useSurveyForm = (office: Office, qrToken: string) => {
   const [formData, setFormData] = useState<SurveyFormData>(() =>
     getInitialFormData(office.id),
   );
@@ -192,15 +192,18 @@ export const useSurveyForm = (office: Office) => {
     setSubmitting(true);
 
     try {
-      await submitSurvey({
-        ...formData,
-        officeName: office.name,
-        submittedAt: new Date().toISOString(),
-      });
+      if (!office.questionIds || !office.questions) {
+        throw new Error("Survey configuration is unavailable for this office.");
+      }
 
-      setIsSuccessOpen(true);
+      await submitSurvey(formData, office.questionIds, office.questions, qrToken);
+      alert("Thank you for your feedback!");
     } catch (error) {
-      setSubmitError("Submission failed, please try again");
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Submission failed, please try again",
+      );
       console.error(error);
     } finally {
       setSubmitting(false);

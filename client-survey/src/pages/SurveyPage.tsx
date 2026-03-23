@@ -5,19 +5,19 @@ import SurveyForm from "../components/SurveyForm";
 import type { Office } from "../types/survey.type";
 
 export default function SurveyPage() {
-  const { officeId } = useParams<{ officeId: string }>();
+  const { qrToken } = useParams<{ qrToken: string }>();
   const [office, setOffice] = useState<Office | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!officeId) return;
+    if (!qrToken) return;
     setLoading(true);
-    fetchOfficeById(officeId)
+    fetchOfficeById(qrToken)
       .then(setOffice)
       .catch(() => setError("Failed to load office data"))
       .finally(() => setLoading(false));
-  }, [officeId]);
+  }, [qrToken]);
 
   if (loading) {
     return (
@@ -27,7 +27,7 @@ export default function SurveyPage() {
     );
   }
 
-  if (error || !office) {
+  if (error || !office || !qrToken) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded shadow-md text-center">
@@ -42,5 +42,5 @@ export default function SurveyPage() {
     );
   }
 
-  return <SurveyForm office={office} />;
+  return <SurveyForm office={office} qrToken={qrToken} />;
 }

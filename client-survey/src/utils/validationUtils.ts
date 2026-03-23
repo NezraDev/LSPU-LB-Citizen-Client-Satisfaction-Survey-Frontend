@@ -34,8 +34,6 @@ export const validateSurveyForm = (data: SurveyFormData): FormErrors => {
   // Ticket Code validation
   if (!data.ticketCode || data.ticketCode.trim() === "") {
     errors.ticketCode = "Ticket code is required";
-  } else if (data.ticketCode.length !== 6) {
-    errors.ticketCode = "Ticket code must be exactly 6 characters";
   }
 
   const personalInfo = data.personalInfo;

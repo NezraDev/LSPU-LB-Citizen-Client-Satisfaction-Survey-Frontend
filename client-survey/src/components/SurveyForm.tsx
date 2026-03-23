@@ -14,9 +14,10 @@ import SuccessModal from "./SuccessModal";
 
 interface SurveyFormProps {
   office: Office;
+  qrToken: string;
 }
 
-const SurveyForm: React.FC<SurveyFormProps> = ({ office }) => {
+const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
   const {
     formData,
     errors,

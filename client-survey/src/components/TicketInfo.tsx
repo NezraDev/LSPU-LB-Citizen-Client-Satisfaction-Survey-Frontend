@@ -33,9 +33,8 @@ const TicketInfo: React.FC<TicketInfoProps> = ({
             type="text"
             value={ticketCode}
             onChange={(e) => onTicketCodeChange(e.target.value)}
-            maxLength={6}
             className={inputClasses}
-            placeholder="Enter 6‑digit code"
+            placeholder="Enter 6-digit ticket code"
           />
           {/* Error message displayed directly below input */}
           {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
