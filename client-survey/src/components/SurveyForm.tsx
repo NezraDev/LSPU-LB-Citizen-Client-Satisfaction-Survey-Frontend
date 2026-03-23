@@ -2,7 +2,7 @@ import React from "react";
 import { useSurveyForm } from "../hooks/useSurveyForm";
 import type { Office } from "../types/survey.type";
 import { SurveyHeader } from "./SurveyHeader";
-import TicketInfo from "./TicketInfo"; // default import
+import TicketInfo from "./TicketInfo";
 import { PersonalInfo } from "./PersonalInfo";
 import { CitizenCharter } from "./CitizenCharter";
 import { ServicesAttained } from "./ServicesAttained";
@@ -10,6 +10,7 @@ import { ServiceQuality } from "./ServiceQuality";
 import { Comments } from "./Comments";
 import { SubmitButton } from "./SubmitButton";
 import ErrorModal from "./ErrorModal";
+import SuccessModal from "./SuccessModal";
 
 interface SurveyFormProps {
   office: Office;
@@ -29,6 +30,8 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office }) => {
     isErrorOpen,
     setIsErrorOpen,
     errorMessage,
+    isSuccessOpen,
+    setIsSuccessOpen,
   } = useSurveyForm(office);
 
   return (
@@ -93,14 +96,17 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office }) => {
           )}
 
           <SubmitButton submitting={submitting} />
-          {/* Modal Logic*/}
         </form>
 
-        {/* Error Modal */}
         <ErrorModal
           isOpen={isErrorOpen}
-          message={errorMessage} 
+          message={errorMessage}
           onClose={() => setIsErrorOpen(false)}
+        />
+
+        <SuccessModal
+          isOpen={isSuccessOpen}
+          onClose={() => setIsSuccessOpen(false)}
         />
       </div>
     </div>
