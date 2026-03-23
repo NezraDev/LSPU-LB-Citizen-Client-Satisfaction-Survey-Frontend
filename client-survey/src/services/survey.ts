@@ -10,7 +10,7 @@ import type {
 
 interface SurveyAnswer {
   question_id: number;
-  answer: string | number | number[];
+  answer: string | string[];
 }
 
 interface SubmitSurveyPayload {
@@ -85,12 +85,12 @@ const addAnswer = (
 
     const option = findOptionByFormValue(question.options, value as string | number);
     if (!option) {
-      throw new Error(`Cannot map answer to option id for question ${questionId}.`);
+      throw new Error(`Cannot map answer to option text for question ${questionId}.`);
     }
 
     answers.push({
       question_id: questionId,
-      answer: option.id,
+      answer: option.option_text,
     });
     return;
   }
@@ -100,17 +100,19 @@ const addAnswer = (
       return;
     }
 
-    const optionIds = value
-      .map((item) => findOptionByFormValue(question.options, item as string | number)?.id)
-      .filter((id): id is number => typeof id === "number");
+    const optionTexts = value
+      .map(
+        (item) => findOptionByFormValue(question.options, item as string | number)?.option_text,
+      )
+      .filter((optionText): optionText is string => typeof optionText === "string");
 
-    if (optionIds.length !== value.length) {
+    if (optionTexts.length !== value.length) {
       throw new Error(`Cannot map one or more checkbox answers for question ${questionId}.`);
     }
 
     answers.push({
       question_id: questionId,
-      answer: optionIds,
+      answer: optionTexts,
     });
     return;
   }
