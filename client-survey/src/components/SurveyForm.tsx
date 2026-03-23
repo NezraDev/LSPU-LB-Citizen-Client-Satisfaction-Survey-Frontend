@@ -13,9 +13,10 @@ import ErrorModal from "./ErrorModal";
 
 interface SurveyFormProps {
   office: Office;
+  qrToken: string;
 }
 
-const SurveyForm: React.FC<SurveyFormProps> = ({ office }) => {
+const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
   const {
     formData,
     errors,
@@ -29,7 +30,7 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office }) => {
     isErrorOpen,
     setIsErrorOpen,
     errorMessage,
-  } = useSurveyForm(office);
+  } = useSurveyForm(office, qrToken);
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">

@@ -14,6 +14,7 @@ interface SurveyAnswer {
 }
 
 interface SubmitSurveyPayload {
+  qr_token: string;
   ticket_code: string;
   answers: SurveyAnswer[];
 }
@@ -166,6 +167,7 @@ const buildSubmitPayload = (
   data: SurveyFormData,
   questionIds: SurveyQuestionIds,
   questions: SurveyQuestion[],
+  qrToken: string,
 ): SubmitSurveyPayload => {
   const answers: SurveyAnswer[] = [];
 
@@ -220,6 +222,7 @@ const buildSubmitPayload = (
   addAnswer(answers, questions, questionIds.comments, data.comments);
 
   return {
+    qr_token: qrToken.trim(),
     ticket_code: data.ticketCode.trim().toUpperCase(),
     answers,
   };
@@ -229,9 +232,10 @@ export const submitSurvey = async (
   data: SurveyFormData,
   questionIds: SurveyQuestionIds,
   questions: SurveyQuestion[],
+  qrToken: string,
 ): Promise<void> => {
   try {
-    const payload = buildSubmitPayload(data, questionIds, questions);
+    const payload = buildSubmitPayload(data, questionIds, questions, qrToken);
     await api.post("/survey/submit", payload);
   } catch (error) {
     if (axios.isAxiosError(error)) {
