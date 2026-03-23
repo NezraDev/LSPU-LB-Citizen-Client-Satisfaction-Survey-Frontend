@@ -197,7 +197,7 @@ export const useSurveyForm = (office: Office, qrToken: string) => {
       }
 
       await submitSurvey(formData, office.questionIds, office.questions, qrToken);
-      alert("Thank you for your feedback!");
+      setIsSuccessOpen(true);
     } catch (error) {
       setSubmitError(
         error instanceof Error
