@@ -27,7 +27,7 @@ export default function SurveyPage() {
     );
   }
 
-  if (error || !office) {
+  if (error || !office || !qrToken) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded shadow-md text-center">
@@ -42,5 +42,5 @@ export default function SurveyPage() {
     );
   }
 
-  return <SurveyForm office={office} />;
+  return <SurveyForm office={office} qrToken={qrToken} />;
 }

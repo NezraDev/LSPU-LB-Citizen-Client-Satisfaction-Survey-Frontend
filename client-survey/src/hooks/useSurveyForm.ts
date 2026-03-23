@@ -48,7 +48,7 @@ const getInitialFormData = (officeId: string): SurveyFormData => {
   };
 };
 
-export const useSurveyForm = (office: Office) => {
+export const useSurveyForm = (office: Office, qrToken: string) => {
   const [formData, setFormData] = useState<SurveyFormData>(() =>
     getInitialFormData(office.id),
   );
@@ -196,7 +196,7 @@ export const useSurveyForm = (office: Office) => {
         throw new Error("Survey configuration is unavailable for this office.");
       }
 
-      await submitSurvey(formData, office.questionIds, office.questions);
+      await submitSurvey(formData, office.questionIds, office.questions, qrToken);
       alert("Thank you for your feedback!");
     } catch (error) {
       setSubmitError(
