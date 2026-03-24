@@ -69,6 +69,14 @@ const addAnswer = (
     return;
   }
 
+  if (typeof value === "string" && value.trim().length === 0) { // added: skip empty string answers before option mapping
+    return;
+  }
+
+  if (Array.isArray(value) && value.length === 0) { // added: skip empty array answers early
+    return;
+  }
+
   const question = getQuestionById(questions, questionId);
   if (!question) {
     return;
@@ -172,6 +180,7 @@ const buildSubmitPayload = (
   qrToken: string,
 ): SubmitSurveyPayload => {
   const answers: SurveyAnswer[] = [];
+  const isStudent = data.personalInfo.clientType === "Student";
 
   addAnswer(
     answers,
@@ -199,13 +208,15 @@ const buildSubmitPayload = (
     questionIds.personalInfo.residence,
     data.personalInfo.residence,
   );
-  addAnswer(answers, questions, questionIds.personalInfo.course, data.personalInfo.course);
-  addAnswer(
-    answers,
-    questions,
-    questionIds.personalInfo.yearLevel,
-    data.personalInfo.yearLevel,
-  );
+  if (isStudent) {
+    addAnswer(answers, questions, questionIds.personalInfo.course, data.personalInfo.course);
+    addAnswer(
+      answers,
+      questions,
+      questionIds.personalInfo.yearLevel,
+      data.personalInfo.yearLevel,
+    );
+  }
   addAnswer(
     answers,
     questions,
