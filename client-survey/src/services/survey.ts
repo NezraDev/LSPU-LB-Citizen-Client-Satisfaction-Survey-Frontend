@@ -16,6 +16,9 @@ interface SurveyAnswer {
 interface SubmitSurveyPayload {
   qr_token: string;
   ticket_code: string;
+  date: string;
+  time_in: string;
+  time_out: string;
   answers: SurveyAnswer[];
 }
 
@@ -241,6 +244,9 @@ const buildSubmitPayload = (
   return {
     qr_token: qrToken.trim(),
     ticket_code: data.ticketCode.trim().toUpperCase(),
+    date: data.date,
+    time_in: data.timeIn,
+    time_out: data.timeOut,
     answers,
   };
 };
