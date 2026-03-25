@@ -1,42 +1,34 @@
-## 🛠️ Installation
+# LSPU-LB Citizen Client Satisfaction Survey Frontend
 
-Clone the repository:
+Frontend application for the citizen client satisfaction survey.
 
-```bash
-git https://github.com/NezraDev/LSPU-LB-Citizen-Client-Satisfaction-Survey-Frontend.git
-cd client-survey
-```
+## Quick Start
 
-Install dependencies:
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-or
+2. Create your environment file:
 
 ```bash
-yarn install
+cp .env.example .env
 ```
 
----
+3. Set the backend API URL in `.env`:
 
-## ▶️ Running the Development Server
+```env
+VITE_API_BASE_URL=http://your-herd-url.test/api
+```
 
-If using Vite:
+Example: VITE_API_BASE_URL=http://satisfactory-survey.test/api
+
+
+4. Run the app:
 
 ```bash
 npm run dev
 ```
 
-If using Create React App:
-
-```bash
-npm start
-```
-
-App runs at:
-
-```
-http://localhost:[PORT]/survey/office id - you can see the id's in config/offices.ts
-```
+Open the app at [http://localhost:5173](http://localhost:5173).
