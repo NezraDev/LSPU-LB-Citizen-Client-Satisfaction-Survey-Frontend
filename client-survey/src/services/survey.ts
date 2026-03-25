@@ -69,6 +69,18 @@ const addAnswer = (
     return;
   }
 
+  // sa part na may comments refer nlng sa bug report for more info
+  // https://docs.google.com/document/d/1XLiUg1vl8LMv67r8HV1QpLwhL0hExz1Yp7hLTaDG_mU/edit?tab=t.jvq5872xwmin
+  // skip empty string answers before option mapping
+  if (typeof value === "string" && value.trim().length === 0) { 
+    return;
+  }
+
+  // skip empty array answers early
+  if (Array.isArray(value) && value.length === 0) {
+    return;
+  }
+
   const question = getQuestionById(questions, questionId);
   if (!question) {
     return;
@@ -172,6 +184,7 @@ const buildSubmitPayload = (
   qrToken: string,
 ): SubmitSurveyPayload => {
   const answers: SurveyAnswer[] = [];
+  const isStudent = data.personalInfo.clientType === "Student";
 
   addAnswer(
     answers,
@@ -199,13 +212,15 @@ const buildSubmitPayload = (
     questionIds.personalInfo.residence,
     data.personalInfo.residence,
   );
-  addAnswer(answers, questions, questionIds.personalInfo.course, data.personalInfo.course);
-  addAnswer(
-    answers,
-    questions,
-    questionIds.personalInfo.yearLevel,
-    data.personalInfo.yearLevel,
-  );
+  if (isStudent) {
+    addAnswer(answers, questions, questionIds.personalInfo.course, data.personalInfo.course);
+    addAnswer(
+      answers,
+      questions,
+      questionIds.personalInfo.yearLevel,
+      data.personalInfo.yearLevel,
+    );
+  }
   addAnswer(
     answers,
     questions,
