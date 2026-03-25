@@ -69,11 +69,15 @@ const addAnswer = (
     return;
   }
 
-  if (typeof value === "string" && value.trim().length === 0) { // added: skip empty string answers before option mapping
+  // sa part na may comments refer nlng sa bug report for more info
+  // https://docs.google.com/document/d/1XLiUg1vl8LMv67r8HV1QpLwhL0hExz1Yp7hLTaDG_mU/edit?tab=t.jvq5872xwmin
+  // skip empty string answers before option mapping
+  if (typeof value === "string" && value.trim().length === 0) { 
     return;
   }
 
-  if (Array.isArray(value) && value.length === 0) { // added: skip empty array answers early
+  // skip empty array answers early
+  if (Array.isArray(value) && value.length === 0) {
     return;
   }
 
