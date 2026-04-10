@@ -48,7 +48,7 @@ const findOptionByFormValue = (
   const normalizedValue = normalize(stringValue);
 
   return options.find((option) => {
-    const normalizedOption = normalize(option.option_text);
+    const normalizedOption = normalize(option.option_text ?? option.name ?? "");
     return (
       normalizedOption === normalizedValue ||
       normalizedOption.startsWith(`${normalizedValue} -`) ||
@@ -89,6 +89,8 @@ const addAnswer = (
     return;
   }
 
+  const stringValue = String(value).trim();
+
   const isOptionQuestion =
     question.question_type === "radio" || question.question_type === "multiple_choice";
   const isCheckboxQuestion = question.question_type === "checkbox";
@@ -105,7 +107,7 @@ const addAnswer = (
 
     answers.push({
       question_id: questionId,
-      answer: option.option_text,
+      answer: option.option_text ?? option.name ?? stringValue,
     });
     return;
   }
@@ -116,9 +118,10 @@ const addAnswer = (
     }
 
     const optionTexts = value
-      .map(
-        (item) => findOptionByFormValue(question.options, item as string | number)?.option_text,
-      )
+      .map((item) => {
+        const option = findOptionByFormValue(question.options, item as string | number);
+        return option?.option_text ?? option?.name;
+      })
       .filter((optionText): optionText is string => typeof optionText === "string");
 
     if (optionTexts.length !== value.length) {
@@ -144,7 +147,6 @@ const addAnswer = (
     return;
   }
 
-  const stringValue = String(value).trim();
   if (stringValue.length === 0) {
     return;
   }
