@@ -10,8 +10,21 @@ import type {
   FormErrors,
 } from "../types/survey.type";
 
+const createEmptyQuality = (): ServiceQuality => ({
+  satisfaction: undefined,
+  responsiveness: undefined,
+  communication: undefined,
+  reliability: undefined,
+  integrity: undefined,
+  assurance: undefined,
+  access: undefined,
+  costs: undefined,
+  outcome: undefined,
+});
+
 const getInitialFormData = (officeId: string): SurveyFormData => {
   const now = new Date();
+
   return {
     date: formatDate(now),
     ticketCode: "",
@@ -33,17 +46,8 @@ const getInitialFormData = (officeId: string): SurveyFormData => {
     cc2: "",
     cc3: "",
     services: [],
-    quality: {
-      satisfaction: undefined,
-      responsiveness: undefined,
-      communication: undefined,
-      reliability: undefined,
-      integrity: undefined,
-      assurance: undefined,
-      access: undefined,
-      costs: undefined,
-      outcome: undefined,
-    },
+    quality: createEmptyQuality(),
+    qualityByService: {},
     comments: "",
   };
 };
@@ -97,7 +101,6 @@ export const useSurveyForm = (office: Office, qrToken: string) => {
           updated.cc1 = undefined;
           updated.cc2 = undefined;
           updated.cc3 = undefined;
-        } else if (field === "cc2" || field === "cc3" || field === "services") {
         } else if (field === "ticketCode") {
           updated.ticketCode = undefined;
         }
@@ -135,12 +138,30 @@ export const useSurveyForm = (office: Office, qrToken: string) => {
     [],
   );
 
-  const handleQualityChange = useCallback(
-    <K extends keyof ServiceQuality>(field: K, value: ServiceQuality[K]) => {
-      setFormData((prev) => ({
-        ...prev,
-        quality: { ...prev.quality, [field]: value },
-      }));
+  const handleQualityChangeForService = useCallback(
+    <K extends keyof ServiceQuality>(
+      serviceName: string,
+      field: K,
+      value: ServiceQuality[K],
+    ) => {
+      setFormData((prev) => {
+        const currentServiceQuality =
+          prev.qualityByService[serviceName] ?? createEmptyQuality();
+
+        const updatedServiceQuality = {
+          ...currentServiceQuality,
+          [field]: value,
+        };
+
+        return {
+          ...prev,
+          quality: updatedServiceQuality,
+          qualityByService: {
+            ...prev.qualityByService,
+            [serviceName]: updatedServiceQuality,
+          },
+        };
+      });
 
       setErrors((prev) => ({
         ...prev,
@@ -150,18 +171,43 @@ export const useSurveyForm = (office: Office, qrToken: string) => {
     [],
   );
 
-  const toggleService = useCallback((service: string) => {
-    setFormData((prev) => {
-      const alreadySelected = prev.services.includes(service);
-      const newServices = alreadySelected
-        ? prev.services.filter((s) => s !== service)
-        : [...prev.services, service];
+  const toggleService = useCallback(
+    (service: string) => {
+      setFormData((prev) => {
+        const alreadySelected = prev.services.includes(service);
 
-      return { ...prev, services: newServices };
-    });
+        if (alreadySelected) {
+          const newServices = prev.services.filter((s) => s !== service);
+          const updatedQualityByService = { ...prev.qualityByService };
+          delete updatedQualityByService[service];
 
-    setErrors((prev) => ({ ...prev, services: undefined }));
-  }, []);
+          return {
+            ...prev,
+            services: newServices,
+            qualityByService: updatedQualityByService,
+            quality:
+              newServices.length > 0
+                ? updatedQualityByService[newServices[0]] ?? createEmptyQuality()
+                : createEmptyQuality(),
+          };
+        }
+
+        const newServices = [...prev.services, service];
+
+        return {
+          ...prev,
+          services: newServices,
+          qualityByService: {
+            ...prev.qualityByService,
+            [service]: prev.qualityByService[service] ?? createEmptyQuality(),
+          },
+        };
+      });
+
+      setErrors((prev) => ({ ...prev, services: undefined }));
+    },
+    [],
+  );
 
   const handleSubmit = async () => {
     setSubmitError(null);
@@ -217,7 +263,7 @@ export const useSurveyForm = (office: Office, qrToken: string) => {
     submitError,
     handleChange,
     handlePersonalInfoChange,
-    handleQualityChange,
+    handleQualityChangeForService,
     toggleService,
     handleSubmit,
     isErrorOpen,
