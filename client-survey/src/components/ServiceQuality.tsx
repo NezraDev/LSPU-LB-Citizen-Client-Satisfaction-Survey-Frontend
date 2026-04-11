@@ -11,6 +11,9 @@ interface ServiceQualityProps {
     value: Rating,
   ) => void;
   errors?: Partial<Record<keyof ServiceQualityType, string>>;
+  currentService?: string;
+  onNext?: () => void;
+  isLast?: boolean;
 }
 
 const dimensions: { name: keyof ServiceQualityType; label: string }[] = [
@@ -65,12 +68,21 @@ export const ServiceQuality: React.FC<ServiceQualityProps> = ({
   data,
   onChange,
   errors = {},
+  currentService,
+  onNext,
+  isLast,
 }) => {
   return (
     <fieldset className="w-full border border-gray-300 rounded-md p-2 sm:p-4">
       <legend className="text-sm sm:text-md font-medium text-gray-700 px-3 sm:px-4 py-1 bg-gray-100 border border-gray-300 rounded-md">
         SERVICE QUALITY DIMENSIONS
       </legend>
+
+      {currentService && (
+        <div className="mb-3 text-sm font-semibold text-blue-600">
+          Service: {currentService}
+        </div>
+      )}
 
       <div className="bg-gray-100 border border-gray-300 rounded-md p-2 sm:p-3 mb-4 text-xs sm:text-sm text-gray-700">
         <p className="font-medium">Rate each statement:</p>
@@ -82,8 +94,7 @@ export const ServiceQuality: React.FC<ServiceQualityProps> = ({
             <span className="font-semibold">4</span> – Agree
           </li>
           <li>
-            <span className="font-semibold">3</span> – Neither Agree nor
-            Disagree
+            <span className="font-semibold">3</span> – Neither Agree nor Disagree
           </li>
           <li>
             <span className="font-semibold">2</span> – Disagree
@@ -114,6 +125,7 @@ export const ServiceQuality: React.FC<ServiceQualityProps> = ({
               ))}
             </tr>
           </thead>
+
           <tbody className="bg-white divide-y divide-gray-200">
             {dimensions.map((dim) => (
               <tr key={dim.name}>
@@ -125,6 +137,7 @@ export const ServiceQuality: React.FC<ServiceQualityProps> = ({
                     </span>
                   )}
                 </td>
+
                 {ratingValues.map((value) => (
                   <td
                     key={value}
@@ -143,11 +156,23 @@ export const ServiceQuality: React.FC<ServiceQualityProps> = ({
             ))}
           </tbody>
         </table>
+
         {Object.keys(errors).length > 0 && (
           <p className="text-red-500 text-sm mt-2">
             Please rate all service quality dimensions.
           </p>
         )}
+      </div>
+
+      <div className="flex justify-end mt-4">
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={isLast}
+          className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+        >
+          NEXT
+        </button>
       </div>
     </fieldset>
   );

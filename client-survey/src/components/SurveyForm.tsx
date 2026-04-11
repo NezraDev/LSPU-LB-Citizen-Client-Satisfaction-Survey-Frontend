@@ -25,7 +25,7 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
     submitError,
     handleChange,
     handlePersonalInfoChange,
-    handleQualityChange,
+    handleQualityChangeForService,
     toggleService,
     handleSubmit,
     isErrorOpen,
@@ -34,6 +34,44 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
     isSuccessOpen,
     setIsSuccessOpen,
   } = useSurveyForm(office, qrToken);
+
+  const [currentServiceIndex, setCurrentServiceIndex] = React.useState(0);
+  const [showServiceQuality, setShowServiceQuality] = React.useState(false);
+
+  const selectedServices = office.services
+    .map((service) => service.name)
+    .filter((serviceName) => formData.services.includes(serviceName));
+
+  const currentService = selectedServices[currentServiceIndex] || "";
+
+  const currentQuality =
+    currentService && formData.qualityByService[currentService]
+      ? formData.qualityByService[currentService]
+      : formData.quality;
+
+  React.useEffect(() => {
+    if (selectedServices.length === 0) {
+      setCurrentServiceIndex(0);
+      setShowServiceQuality(false);
+      return;
+    }
+
+    if (currentServiceIndex >= selectedServices.length) {
+      setCurrentServiceIndex(0);
+    }
+  }, [selectedServices, currentServiceIndex]);
+
+  const handleNextFromServices = () => {
+    if (selectedServices.length === 0) return;
+    setCurrentServiceIndex(0);
+    setShowServiceQuality(true);
+  };
+
+  const handleNextService = () => {
+    if (currentServiceIndex < selectedServices.length - 1) {
+      setCurrentServiceIndex((prev) => prev + 1);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
@@ -79,11 +117,29 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
             error={errors.services}
           />
 
-          <ServiceQuality
-            data={formData.quality}
-            onChange={handleQualityChange}
-            errors={errors.quality}
-          />
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleNextFromServices}
+              disabled={selectedServices.length === 0}
+              className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+            >
+              NEXT
+            </button>
+          </div>
+
+          {showServiceQuality && selectedServices.length > 0 && (
+            <ServiceQuality
+              data={currentQuality}
+              onChange={(field, value) =>
+                handleQualityChangeForService(currentService, field, value)
+              }
+              errors={errors.quality}
+              currentService={currentService}
+              onNext={handleNextService}
+              isLast={currentServiceIndex === selectedServices.length - 1}
+            />
+          )}
 
           <Comments
             value={formData.comments || ""}

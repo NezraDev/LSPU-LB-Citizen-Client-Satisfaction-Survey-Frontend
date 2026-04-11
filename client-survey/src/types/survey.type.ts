@@ -90,6 +90,8 @@ export interface ServiceQuality {
   outcome?: Rating;
 }
 
+export type ServiceQualityMap = Record<string, ServiceQuality>;
+
 export interface SurveyFormData {
   date: string;
   ticketCode: string;
@@ -102,6 +104,7 @@ export interface SurveyFormData {
   cc3: string;
   services: string[];
   quality: ServiceQuality;
+  qualityByService: ServiceQualityMap;
   comments?: string;
 }
 
