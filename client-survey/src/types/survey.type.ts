@@ -10,9 +10,13 @@ export interface Service {
 export interface SurveyQuestionOption {
   id: number;
   question_id: number;
-  office_id: number | null;
-  option_text: string;
+  office_id?: number | null;
+  option_text?: string;
+  name?: string;
+  category?: string;
   order: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface SurveyQuestion {

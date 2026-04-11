@@ -61,13 +61,20 @@ const mapOfficeFromApi = (data: SurveyApiResponse): Office => {
   const servicesQuestion = data.questions.find(
     (q) => normalizeSection(q.section_name) === "services attained" && q.order === 1,
   );
+  const officeId = data.office.id;
 
   return {
     id: String(data.office.id),
     name: data.office.name,
     qrToken: data.office.qr_token,
-    services:
-      servicesQuestion?.options.map((option) => ({ name: option.option_text })) ?? [],
+    services: (servicesQuestion?.options ?? [])
+      .filter((option) => option.office_id === officeId)
+      .sort((left, right) => left.order - right.order)
+      .map((option) => ({
+        name: option.name ?? option.option_text ?? "",
+        category: option.category,
+      }))
+      .filter((service) => service.name.length > 0),
     questionIds: buildQuestionIds(data.questions),
     questions: data.questions,
   };
