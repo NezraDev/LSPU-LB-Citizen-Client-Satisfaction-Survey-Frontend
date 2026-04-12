@@ -5,10 +5,12 @@ import type {
 } from "../types/survey.type";
 
 interface ServiceQualityProps {
-  data: ServiceQualityType;
-  onChange: <K extends keyof ServiceQualityType>(
-    field: K,
-    value: Rating,
+  data: Record<string, ServiceQualityType>;
+  selectedServices?: string[];
+  onChange: (
+    service: string,
+    field: keyof ServiceQualityType,
+    value: Rating
   ) => void;
   errors?: Partial<Record<keyof ServiceQualityType, string>>;
 }
@@ -61,16 +63,77 @@ const dimensions: { name: keyof ServiceQualityType; label: string }[] = [
 
 const ratingValues: Rating[] = [5, 4, 3, 2, 1, "N/A"];
 
-export const ServiceQuality: React.FC<ServiceQualityProps> = ({
+const emptyQuality: ServiceQualityType = {
+  satisfaction: undefined,
+  responsiveness: undefined,
+  communication: undefined,
+  reliability: undefined,
+  integrity: undefined,
+  assurance: undefined,
+  access: undefined,
+  costs: undefined,
+  outcome: undefined,
+};
+
+const ServiceQuality: React.FC<ServiceQualityProps> = ({
   data,
+  selectedServices = [],
   onChange,
-  errors = {},
 }) => {
+  const [index, setIndex] = React.useState(0);
+  const [showError, setShowError] = React.useState(false);
+
+  const currentService = selectedServices[index];
+
+  const currentData: ServiceQualityType =
+    data?.[currentService] ?? emptyQuality;
+
+  const handleSelect = (field: keyof ServiceQualityType, value: Rating) => {
+    if (!currentService) return;
+    onChange(currentService, field, value);
+  };
+
+  const isComplete = dimensions.every(
+    (d) => currentData?.[d.name] !== undefined
+  );
+
+  const isLastService = index >= selectedServices.length - 1;
+
+  const next = () => {
+    if (!currentService) return;
+
+    if (!isComplete) {
+      setShowError(true);
+      return;
+    }
+
+    setShowError(false);
+
+    if (!isLastService) {
+      setIndex((prev) =>
+        Math.min(prev + 1, selectedServices.length - 1)
+      );
+    }
+  };
+
+  const prev = () => {
+    setShowError(false);
+    setIndex((prev) => Math.max(prev - 1, 0));
+  };
+
   return (
     <fieldset className="w-full border border-gray-300 rounded-md p-2 sm:p-4">
       <legend className="text-sm sm:text-md font-medium text-gray-700 px-3 sm:px-4 py-1 bg-gray-100 border border-gray-300 rounded-md">
         SERVICE QUALITY DIMENSIONS
       </legend>
+
+      <div
+        className={`text-center font-bold mb-3 ${
+          !currentService ? "text-red-500" : "text-gray-700"
+        }`}
+      >
+        {currentService || "Please select a service first"}
+      </div>
 
       <div className="bg-gray-100 border border-gray-300 rounded-md p-2 sm:p-3 mb-4 text-xs sm:text-sm text-gray-700">
         <p className="font-medium">Rate each statement:</p>
@@ -82,8 +145,7 @@ export const ServiceQuality: React.FC<ServiceQualityProps> = ({
             <span className="font-semibold">4</span> – Agree
           </li>
           <li>
-            <span className="font-semibold">3</span> – Neither Agree nor
-            Disagree
+            <span className="font-semibold">3</span> – Neither Agree nor Disagree
           </li>
           <li>
             <span className="font-semibold">2</span> – Disagree
@@ -101,54 +163,98 @@ export const ServiceQuality: React.FC<ServiceQualityProps> = ({
         <table className="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-2 sm:px-4 py-1 sm:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+              <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase sticky left-0 bg-gray-50 z-10">
                 Dimension
               </th>
               {ratingValues.map((val) => (
                 <th
-                  key={val}
-                  className="px-1 sm:px-2 py-1 sm:py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[2rem] xs:min-w-[2.5rem] sm:min-w-[3rem]"
+                  key={String(val)}
+                  className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase"
                 >
                   {val}
                 </th>
               ))}
             </tr>
           </thead>
+
           <tbody className="bg-white divide-y divide-gray-200">
-            {dimensions.map((dim) => (
-              <tr key={dim.name}>
-                <td className="px-2 sm:px-4 py-1 sm:py-2 text-gray-700 sticky left-0 bg-white text-[0.7rem] xs:text-xs sm:text-sm">
-                  {dim.label}
-                  {errors[dim.name] && (
-                    <span className="ml-2 text-red-500 text-xs">
-                      * Required
-                    </span>
-                  )}
-                </td>
-                {ratingValues.map((value) => (
-                  <td
-                    key={value}
-                    className="px-1 sm:px-2 py-1 sm:py-2 text-center"
-                  >
-                    <input
-                      type="radio"
-                      value={value}
-                      checked={data[dim.name] === value}
-                      onChange={() => onChange(dim.name, value)}
-                      className="focus:ring-blue-500 h-5 w-5 xs:h-4 xs:w-4 sm:h-4 sm:w-4 text-blue-600 cursor-pointer"
-                    />
+            {dimensions.map((dim) => {
+              const isMissing = currentData?.[dim.name] === undefined;
+
+              return (
+                <tr key={dim.name}>
+                  <td className="px-2 sm:px-4 py-2 text-gray-700">
+                    {dim.label}
+                    {showError && isMissing && (
+                      <span className="ml-2 text-red-500 text-xs">
+                        * Required
+                      </span>
+                    )}
                   </td>
-                ))}
-              </tr>
-            ))}
+
+                  {ratingValues.map((value) => (
+                    <td
+                      key={String(value)}
+                      className={`px-4 py-2 text-center ${
+                        !currentService
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer"
+                      }`}
+                      onClick={() =>
+                        currentService && handleSelect(dim.name, value)
+                      }
+                    >
+                      <input
+                        type="radio"
+                        name={`${currentService}-${dim.name}`}
+                        className="w-[18px] h-[18px] accent-blue-600"
+                        checked={
+                          data?.[currentService]?.[dim.name] === value
+                        }
+                        readOnly
+                      />
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
-        {Object.keys(errors).length > 0 && (
+
+        {showError && !isComplete && (
           <p className="text-red-500 text-sm mt-2">
             Please rate all service quality dimensions.
           </p>
         )}
       </div>
+
+      {selectedServices.length > 1 && (
+        <div className="flex justify-between items-center mt-6 px-2">
+          <button
+            type="button"
+            onClick={prev}
+            disabled={!currentService || index === 0}
+            className="border px-6 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
+          >
+            {"< Prev"}
+          </button>
+
+          {!isLastService && (
+            <button
+              type="button"
+              onClick={next}
+              disabled={!currentService}
+              className="border px-6 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
+            >
+              {selectedServices[index + 1]
+                ? `${selectedServices[index + 1]} >`
+                : "Next"}
+            </button>
+          )}
+        </div>
+      )}
     </fieldset>
   );
 };
+
+export default ServiceQuality;

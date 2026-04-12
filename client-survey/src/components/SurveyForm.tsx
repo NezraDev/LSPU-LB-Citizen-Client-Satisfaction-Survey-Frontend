@@ -1,12 +1,15 @@
 import React from "react";
 import { useSurveyForm } from "../hooks/useSurveyForm";
-import type { Office } from "../types/survey.type";
+import type {
+  Office,
+  ServiceQuality as ServiceQualityType,
+} from "../types/survey.type";
 import { SurveyHeader } from "./SurveyHeader";
 import TicketInfo from "./TicketInfo";
 import { PersonalInfo } from "./PersonalInfo";
 import { CitizenCharter } from "./CitizenCharter";
 import { ServicesAttained } from "./ServicesAttained";
-import { ServiceQuality } from "./ServiceQuality";
+import ServiceQuality from "./ServiceQuality";
 import { Comments } from "./Comments";
 import { SubmitButton } from "./SubmitButton";
 import ErrorModal from "./ErrorModal";
@@ -16,6 +19,18 @@ interface SurveyFormProps {
   office: Office;
   qrToken: string;
 }
+
+const emptyQuality: ServiceQualityType = {
+  satisfaction: undefined,
+  responsiveness: undefined,
+  communication: undefined,
+  reliability: undefined,
+  integrity: undefined,
+  assurance: undefined,
+  access: undefined,
+  costs: undefined,
+  outcome: undefined,
+};
 
 const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
   const {
@@ -35,6 +50,24 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
     setIsSuccessOpen,
   } = useSurveyForm(office, qrToken);
 
+  const [qualityMap, setQualityMap] = React.useState<
+    Record<string, ServiceQualityType>
+  >({});
+
+  const applyQualityToForm = () => {
+    const firstService = formData.services?.[0];
+    if (!firstService) return;
+
+    const quality = qualityMap[firstService];
+    if (!quality) return;
+
+    Object.entries(quality).forEach(([field, value]) => {
+      if (value !== undefined) {
+        handleQualityChange(field as keyof ServiceQualityType, value);
+      }
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
@@ -43,6 +76,7 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            applyQualityToForm();
             handleSubmit();
           }}
           className="space-y-4 sm:space-y-6"
@@ -69,7 +103,11 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
             onCC1Change={(val) => handleChange("cc1", val)}
             onCC2Change={(val) => handleChange("cc2", val)}
             onCC3Change={(val) => handleChange("cc3", val)}
-            errors={{ cc1: errors.cc1, cc2: errors.cc2, cc3: errors.cc3 }}
+            errors={{
+              cc1: errors.cc1,
+              cc2: errors.cc2,
+              cc3: errors.cc3,
+            }}
           />
 
           <ServicesAttained
@@ -80,8 +118,17 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
           />
 
           <ServiceQuality
-            data={formData.quality}
-            onChange={handleQualityChange}
+            data={qualityMap}
+            selectedServices={formData.services}
+            onChange={(service, field, value) => {
+              setQualityMap((prev) => ({
+                ...prev,
+                [service]: {
+                  ...(prev[service] ?? emptyQuality),
+                  [field]: value,
+                },
+              }));
+            }}
             errors={errors.quality}
           />
 
