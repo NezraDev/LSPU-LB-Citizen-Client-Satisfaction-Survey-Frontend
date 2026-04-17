@@ -31,7 +31,6 @@ export const validateSurveyForm = (data: SurveyFormData): FormErrors => {
     quality: {},
   };
 
-  // Ticket Code validation
   if (!data.ticketCode || data.ticketCode.trim() === "") {
     errors.ticketCode = "Ticket code is required";
   }
@@ -83,13 +82,22 @@ export const validateSurveyForm = (data: SurveyFormData): FormErrors => {
 
   if (data.services.length === 0) {
     errors.services = "Please select at least one service";
+    return errors;
   }
 
-  QUALITY_DIMENSIONS.forEach((dim) => {
-    if (data.quality[dim] == null) {
-      errors.quality[dim] = "This rating is required";
+  for (const service of data.services) {
+    const serviceQuality = data.qualityMap?.[service];
+
+    QUALITY_DIMENSIONS.forEach((dim) => {
+      if (serviceQuality?.[dim] == null && errors.quality[dim] == null) {
+        errors.quality[dim] = `This rating is required for ${service}`;
+      }
+    });
+
+    if (Object.keys(errors.quality).length > 0) {
+      break;
     }
-  });
+  }
 
   return errors;
 };
