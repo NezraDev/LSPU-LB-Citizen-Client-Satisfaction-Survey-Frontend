@@ -54,20 +54,6 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
     Record<string, ServiceQualityType>
   >({});
 
-  const applyQualityToForm = () => {
-    const firstService = formData.services?.[0];
-    if (!firstService) return;
-
-    const quality = qualityMap[firstService];
-    if (!quality) return;
-
-    Object.entries(quality).forEach(([field, value]) => {
-      if (value !== undefined) {
-        handleQualityChange(field as keyof ServiceQualityType, value);
-      }
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
@@ -76,8 +62,10 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            applyQualityToForm();
-            handleSubmit();
+            handleSubmit({
+              ...formData,
+              qualityMap,
+            });
           }}
           className="space-y-4 sm:space-y-6"
         >
@@ -128,6 +116,8 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ office, qrToken }) => {
                   [field]: value,
                 },
               }));
+
+              handleQualityChange(field, value);
             }}
             errors={errors.quality}
           />

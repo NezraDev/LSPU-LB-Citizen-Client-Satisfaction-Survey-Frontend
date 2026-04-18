@@ -44,6 +44,7 @@ const getInitialFormData = (officeId: string): SurveyFormData => {
       costs: undefined,
       outcome: undefined,
     },
+    qualityMap: {},
     comments: "",
   };
 };
@@ -97,7 +98,6 @@ export const useSurveyForm = (office: Office, qrToken: string) => {
           updated.cc1 = undefined;
           updated.cc2 = undefined;
           updated.cc3 = undefined;
-        } else if (field === "cc2" || field === "cc3" || field === "services") {
         } else if (field === "ticketCode") {
           updated.ticketCode = undefined;
         }
@@ -163,10 +163,12 @@ export const useSurveyForm = (office: Office, qrToken: string) => {
     setErrors((prev) => ({ ...prev, services: undefined }));
   }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (overrideData?: SurveyFormData) => {
     setSubmitError(null);
 
-    const validationErrors = validateSurveyForm(formData);
+    const submitData = overrideData ?? formData;
+
+    const validationErrors = validateSurveyForm(submitData);
     const hasErrors =
       Object.keys(validationErrors.personalInfo).length > 0 ||
       Object.keys(validationErrors.quality).length > 0 ||
@@ -196,7 +198,13 @@ export const useSurveyForm = (office: Office, qrToken: string) => {
         throw new Error("Survey configuration is unavailable for this office.");
       }
 
-      await submitSurvey(formData, office.questionIds, office.questions, qrToken);
+      await submitSurvey(
+        submitData,
+        office.questionIds,
+        office.questions,
+        qrToken,
+        office.services,
+      );
       setIsSuccessOpen(true);
     } catch (error) {
       setSubmitError(

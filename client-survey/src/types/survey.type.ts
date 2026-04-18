@@ -3,6 +3,7 @@ export type ClientType = "General Public" | "Student" | "Government Employee";
 export type Rating = 5 | 4 | 3 | 2 | 1 | "N/A";
 
 export interface Service {
+  id: number;
   name: string;
   category?: string;
 }
@@ -106,6 +107,7 @@ export interface SurveyFormData {
   cc3: string;
   services: string[];
   quality: ServiceQuality;
+  qualityMap?: Record<string, ServiceQuality>;
   comments?: string;
 }
 

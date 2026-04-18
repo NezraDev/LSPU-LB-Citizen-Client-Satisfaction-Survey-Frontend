@@ -6,11 +6,13 @@ import type {
   SurveyQuestion,
   SurveyQuestionOption,
   ServiceQuality,
+  Service,
 } from "../types/survey.type";
 
 interface SurveyAnswer {
   question_id: number;
   answer: string | string[];
+  service_id?: number;
 }
 
 interface SubmitSurveyPayload {
@@ -60,26 +62,24 @@ const findOptionByFormValue = (
 const getQuestionById = (
   questions: SurveyQuestion[],
   questionId: number,
-): SurveyQuestion | undefined => questions.find((question) => question.id === questionId);
+): SurveyQuestion | undefined =>
+  questions.find((question) => question.id === questionId);
 
 const addAnswer = (
   answers: SurveyAnswer[],
   questions: SurveyQuestion[],
   questionId: number | undefined,
   value: unknown,
+  serviceId?: number,
 ) => {
   if (!questionId || value == null) {
     return;
   }
 
-  // sa part na may comments refer nlng sa bug report for more info
-  // https://docs.google.com/document/d/1XLiUg1vl8LMv67r8HV1QpLwhL0hExz1Yp7hLTaDG_mU/edit?tab=t.jvq5872xwmin
-  // skip empty string answers before option mapping
-  if (typeof value === "string" && value.trim().length === 0) { 
+  if (typeof value === "string" && value.trim().length === 0) {
     return;
   }
 
-  // skip empty array answers early
   if (Array.isArray(value) && value.length === 0) {
     return;
   }
@@ -92,7 +92,8 @@ const addAnswer = (
   const stringValue = String(value).trim();
 
   const isOptionQuestion =
-    question.question_type === "radio" || question.question_type === "multiple_choice";
+    question.question_type === "radio" ||
+    question.question_type === "multiple_choice";
   const isCheckboxQuestion = question.question_type === "checkbox";
 
   if (isOptionQuestion) {
@@ -100,14 +101,21 @@ const addAnswer = (
       return;
     }
 
-    const option = findOptionByFormValue(question.options, value as string | number);
+    const option = findOptionByFormValue(
+      question.options,
+      value as string | number,
+    );
+
     if (!option) {
-      throw new Error(`Cannot map answer to option text for question ${questionId}.`);
+      throw new Error(
+        `Cannot map answer to option text for question ${questionId}.`,
+      );
     }
 
     answers.push({
       question_id: questionId,
       answer: option.option_text ?? option.name ?? stringValue,
+      ...(serviceId ? { service_id: serviceId } : {}),
     });
     return;
   }
@@ -119,18 +127,24 @@ const addAnswer = (
 
     const optionTexts = value
       .map((item) => {
-        const option = findOptionByFormValue(question.options, item as string | number);
+        const option = findOptionByFormValue(
+          question.options,
+          item as string | number,
+        );
         return option?.option_text ?? option?.name;
       })
       .filter((optionText): optionText is string => typeof optionText === "string");
 
     if (optionTexts.length !== value.length) {
-      throw new Error(`Cannot map one or more checkbox answers for question ${questionId}.`);
+      throw new Error(
+        `Cannot map one or more checkbox answers for question ${questionId}.`,
+      );
     }
 
     answers.push({
       question_id: questionId,
       answer: optionTexts,
+      ...(serviceId ? { service_id: serviceId } : {}),
     });
     return;
   }
@@ -143,6 +157,7 @@ const addAnswer = (
     answers.push({
       question_id: questionId,
       answer: value.join(", "),
+      ...(serviceId ? { service_id: serviceId } : {}),
     });
     return;
   }
@@ -154,6 +169,7 @@ const addAnswer = (
   answers.push({
     question_id: questionId,
     answer: stringValue,
+    ...(serviceId ? { service_id: serviceId } : {}),
   });
 };
 
@@ -162,10 +178,9 @@ const mapQualityAnswers = (
   questions: SurveyQuestion[],
   quality: ServiceQuality,
   questionIds: SurveyQuestionIds,
+  serviceId: number,
 ) => {
-  const qualityPairs: Array<
-    [keyof ServiceQuality, number | undefined]
-  > = [
+  const qualityPairs: Array<[keyof ServiceQuality, number | undefined]> = [
     ["satisfaction", questionIds.quality.satisfaction],
     ["responsiveness", questionIds.quality.responsiveness],
     ["communication", questionIds.quality.communication],
@@ -178,7 +193,7 @@ const mapQualityAnswers = (
   ];
 
   qualityPairs.forEach(([field, questionId]) => {
-    addAnswer(answers, questions, questionId, quality[field]);
+    addAnswer(answers, questions, questionId, quality[field], serviceId);
   });
 };
 
@@ -187,6 +202,7 @@ const buildSubmitPayload = (
   questionIds: SurveyQuestionIds,
   questions: SurveyQuestion[],
   qrToken: string,
+  services: Service[],
 ): SubmitSurveyPayload => {
   const answers: SurveyAnswer[] = [];
   const isStudent = data.personalInfo.clientType === "Student";
@@ -197,8 +213,18 @@ const buildSubmitPayload = (
     questionIds.personalInfo.clientType,
     data.personalInfo.clientType,
   );
-  addAnswer(answers, questions, questionIds.personalInfo.name, data.personalInfo.name);
-  addAnswer(answers, questions, questionIds.personalInfo.age, data.personalInfo.age);
+  addAnswer(
+    answers,
+    questions,
+    questionIds.personalInfo.name,
+    data.personalInfo.name,
+  );
+  addAnswer(
+    answers,
+    questions,
+    questionIds.personalInfo.age,
+    data.personalInfo.age,
+  );
   addAnswer(
     answers,
     questions,
@@ -217,8 +243,14 @@ const buildSubmitPayload = (
     questionIds.personalInfo.residence,
     data.personalInfo.residence,
   );
+
   if (isStudent) {
-    addAnswer(answers, questions, questionIds.personalInfo.course, data.personalInfo.course);
+    addAnswer(
+      answers,
+      questions,
+      questionIds.personalInfo.course,
+      data.personalInfo.course,
+    );
     addAnswer(
       answers,
       questions,
@@ -226,6 +258,7 @@ const buildSubmitPayload = (
       data.personalInfo.yearLevel,
     );
   }
+
   addAnswer(
     answers,
     questions,
@@ -239,7 +272,26 @@ const buildSubmitPayload = (
 
   addAnswer(answers, questions, questionIds.services, data.services);
 
-  mapQualityAnswers(answers, questions, data.quality, questionIds);
+  const serviceNameToId = Object.fromEntries(
+    services.map((service) => [service.name, service.id]),
+  );
+
+  data.services.forEach((serviceName) => {
+    const serviceId = serviceNameToId[serviceName];
+    const serviceQuality = data.qualityMap?.[serviceName];
+
+    if (!serviceId || !serviceQuality) {
+      return;
+    }
+
+    mapQualityAnswers(
+      answers,
+      questions,
+      serviceQuality,
+      questionIds,
+      serviceId,
+    );
+  });
 
   addAnswer(answers, questions, questionIds.comments, data.comments);
 
@@ -258,9 +310,16 @@ export const submitSurvey = async (
   questionIds: SurveyQuestionIds,
   questions: SurveyQuestion[],
   qrToken: string,
+  services: Service[],
 ): Promise<void> => {
   try {
-    const payload = buildSubmitPayload(data, questionIds, questions, qrToken);
+    const payload = buildSubmitPayload(
+      data,
+      questionIds,
+      questions,
+      qrToken,
+      services,
+    );
     await api.post("/survey/submit", payload);
   } catch (error) {
     if (axios.isAxiosError(error)) {

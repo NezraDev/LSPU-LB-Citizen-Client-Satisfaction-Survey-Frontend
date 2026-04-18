@@ -59,7 +59,8 @@ const buildQuestionIds = (questions: SurveyQuestion[]): SurveyQuestionIds => ({
 
 const mapOfficeFromApi = (data: SurveyApiResponse): Office => {
   const servicesQuestion = data.questions.find(
-    (q) => normalizeSection(q.section_name) === "services attained" && q.order === 1,
+    (q) =>
+      normalizeSection(q.section_name) === "services attained" && q.order === 1,
   );
   const officeId = data.office.id;
 
@@ -71,6 +72,7 @@ const mapOfficeFromApi = (data: SurveyApiResponse): Office => {
       .filter((option) => option.office_id === officeId)
       .sort((left, right) => left.order - right.order)
       .map((option) => ({
+        id: option.id,
         name: option.name ?? option.option_text ?? "",
         category: option.category,
       }))
