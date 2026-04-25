@@ -230,25 +230,55 @@ const ServiceQuality: React.FC<ServiceQualityProps> = ({
 
       {selectedServices.length > 1 && (
         <div className="flex justify-between items-center mt-6 px-2">
-          <button
-            type="button"
-            onClick={prev}
-            disabled={!currentService || index === 0}
-            className="border px-6 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
-          >
-            {"< Prev"}
-          </button>
+          {index > 0 ? (
+            <button
+              type="button"
+              onClick={prev}
+              disabled={!currentService}
+              className="px-6 py-2 rounded-md border border-green-600/90 text-green-600 font-medium hover:bg-green-50 disabled:opacity-40 flex items-center"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              Prev
+            </button>
+          ) : (
+            <div />
+          )}
 
           {!isLastService && (
             <button
               type="button"
               onClick={next}
               disabled={!currentService}
-              className="border px-6 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
+              className="px-6 py-2 rounded-md bg-green-600 hover:bg-green-700 text-white font-medium disabled:opacity-40 flex items-center"
             >
-              {selectedServices[index + 1]
-                ? `${selectedServices[index + 1]} >`
-                : "Next"}
+              {selectedServices[index + 1] || "Next"}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4 ml-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
             </button>
           )}
         </div>
