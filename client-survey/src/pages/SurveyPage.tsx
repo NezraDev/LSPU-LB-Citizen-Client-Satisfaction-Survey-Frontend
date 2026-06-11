@@ -1,46 +1,72 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { fetchOfficeById } from "../services/offices";
-import SurveyForm from "../components/SurveyForm";
-import type { Office } from "../types/survey.type";
+import { fetchQuestions } from "../services/questions";
+import { fetchServices } from "../services/services";
+import { ClassificationSelector } from "../components/ClassificationSelector";
+import { DynamicSurvey } from "../components/DynamicSurvey";
+import type { Office, SurveyQuestion, Service } from "../types/survey.type";
 
 export default function SurveyPage() {
   const { qrToken } = useParams<{ qrToken: string }>();
+  const [classification, setClassification] = useState<string | null>(null);
   const [office, setOffice] = useState<Office | null>(null);
+  const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!qrToken) return;
-    setLoading(true);
     fetchOfficeById(qrToken)
       .then(setOffice)
-      .catch(() => setError("Failed to load office data"))
-      .finally(() => setLoading(false));
+      .catch(() => setError("Failed to load office data"));
   }, [qrToken]);
+
+  const handleClassificationSelect = async (selected: string) => {
+    setClassification(selected);
+    setLoading(true);
+    try {
+      const [fetchedQuestions, fetchedServices] = await Promise.all([
+        fetchQuestions(),
+        fetchServices(),
+      ]);
+      setQuestions(fetchedQuestions);
+      setServices(fetchedServices);
+    } catch (err) {
+      setError("Failed to load survey content");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!classification) {
+    return <ClassificationSelector onSelect={handleClassificationSelect} />;
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-lg">Loading office information...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        Loading survey...
       </div>
     );
   }
 
-  if (error || !office || !qrToken) {
+  if (error || !office || !questions.length) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded shadow-md text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">
-            Office not found
-          </h1>
-          <p>
-            {error || "Please check the QR code or contact the administrator."}
-          </p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center text-red-600">
+        {error || "Unable to load survey. Please try again."}
       </div>
     );
   }
 
-  return <SurveyForm office={office} qrToken={qrToken} />;
+  return (
+    <DynamicSurvey
+      officeName={office.name}
+      qrToken={qrToken!}
+      questions={questions}
+      services={services}
+      classification={classification}
+    />
+  );
 }
