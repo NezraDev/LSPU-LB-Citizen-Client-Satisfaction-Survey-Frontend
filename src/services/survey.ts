@@ -1,306 +1,162 @@
-import api from "./api";
-import axios from "axios";
+import api from "./api"; // Ensure this path matches your axios instance
 import type {
   SurveyFormData,
-  SurveyQuestionIds,
   SurveyQuestion,
   SurveyQuestionOption,
   ServiceQuality,
-  Service,
 } from "../types/survey.type";
 
-interface SurveyAnswer {
-  question_id: number;
-  answer: string | string[];
-  service_id?: number;
-}
-
-interface SubmitSurveyPayload {
-  qr_token: string;
-  ticket_code: string;
-  date: string;
-  time_in: string;
-  time_out: string;
-  answers: SurveyAnswer[];
-}
-
-const normalize = (value: string): string =>
-  value
-    .replace(/[\u2018\u2019]/g, "'")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
-
-const isNumericString = (value: string): boolean => /^\d+$/.test(value.trim());
-
-const findOptionByFormValue = (
-  options: SurveyQuestionOption[],
-  value: string | number,
-): SurveyQuestionOption | undefined => {
-  const stringValue = String(value).trim();
-
-  if (typeof value === "number" || isNumericString(stringValue)) {
-    const asId = Number(stringValue);
-    const byId = options.find((option) => option.id === asId);
-    if (byId) {
-      return byId;
-    }
-  }
-
-  const normalizedValue = normalize(stringValue);
-
-  return options.find((option) => {
-    const normalizedOption = normalize(option.option_text ?? option.name ?? "");
-    return (
-      normalizedOption === normalizedValue ||
-      normalizedOption.startsWith(`${normalizedValue} -`) ||
-      normalizedOption.startsWith(`${normalizedValue}-`)
-    );
-  });
-};
-
-const getQuestionById = (
-  questions: SurveyQuestion[],
-  questionId: number,
-): SurveyQuestion | undefined =>
-  questions.find((question) => question.id === questionId);
-
-const addAnswer = (
-  answers: SurveyAnswer[],
-  questions: SurveyQuestion[],
-  questionId: number | undefined,
-  value: unknown,
-  serviceId?: number,
-) => {
-  if (!questionId || value == null) {
-    return;
-  }
-
-  if (typeof value === "string" && value.trim().length === 0) {
-    return;
-  }
-
-  if (Array.isArray(value) && value.length === 0) {
-    return;
-  }
-
-  const question = getQuestionById(questions, questionId);
-  if (!question) {
-    return;
-  }
-
-  const stringValue = String(value).trim();
-
-  const isOptionQuestion =
-    question.question_type === "radio" ||
-    question.question_type === "multiple_choice";
-  const isCheckboxQuestion = question.question_type === "checkbox";
-
-  if (isOptionQuestion) {
-    if (Array.isArray(value)) {
-      return;
-    }
-
-    const option = findOptionByFormValue(
-      question.options,
-      value as string | number,
-    );
-
-    if (!option) {
-      throw new Error(
-        `Cannot map answer to option text for question ${questionId}.`,
-      );
-    }
-
-    answers.push({
-      question_id: questionId,
-      answer: option.option_text ?? option.name ?? stringValue,
-      ...(serviceId ? { service_id: serviceId } : {}),
-    });
-    return;
-  }
-
-  if (isCheckboxQuestion) {
-    if (!Array.isArray(value) || value.length === 0) {
-      return;
-    }
-
-    const optionTexts = value
-      .map((item) => {
-        const option = findOptionByFormValue(
-          question.options,
-          item as string | number,
-        );
-        return option?.option_text ?? option?.name;
-      })
-      .filter(
-        (optionText): optionText is string => typeof optionText === "string",
-      );
-
-    if (optionTexts.length !== value.length) {
-      throw new Error(
-        `Cannot map one or more checkbox answers for question ${questionId}.`,
-      );
-    }
-
-    answers.push({
-      question_id: questionId,
-      answer: optionTexts,
-      ...(serviceId ? { service_id: serviceId } : {}),
-    });
-    return;
-  }
-
-  if (Array.isArray(value)) {
-    if (value.length === 0) {
-      return;
-    }
-
-    answers.push({
-      question_id: questionId,
-      answer: value.join(", "),
-      ...(serviceId ? { service_id: serviceId } : {}),
-    });
-    return;
-  }
-
-  if (stringValue.length === 0) {
-    return;
-  }
-
-  answers.push({
-    question_id: questionId,
-    answer: stringValue,
-    ...(serviceId ? { service_id: serviceId } : {}),
-  });
-};
-
-const mapQualityAnswers = (
-  answers: SurveyAnswer[],
-  questions: SurveyQuestion[],
-  quality: ServiceQuality,
-  questionIds: SurveyQuestionIds,
-  serviceId: number,
-) => {
-  const qualityPairs: Array<[keyof ServiceQuality, number | undefined]> = [
-    ["satisfaction", questionIds.quality.satisfaction],
-    ["responsiveness", questionIds.quality.responsiveness],
-    ["communication", questionIds.quality.communication],
-    ["reliability", questionIds.quality.reliability],
-    ["integrity", questionIds.quality.integrity],
-    ["assurance", questionIds.quality.assurance],
-    ["access", questionIds.quality.access],
-    ["costs", questionIds.quality.costs],
-    ["outcome", questionIds.quality.outcome],
-  ];
-
-  qualityPairs.forEach(([field, questionId]) => {
-    addAnswer(answers, questions, questionId, quality[field], serviceId);
-  });
-};
-
-const buildSubmitPayload = (
-  data: SurveyFormData,
-  questionIds: SurveyQuestionIds,
-  questions: SurveyQuestion[],
-  qrToken: string,
-): SubmitSurveyPayload => {
-  const answers: SurveyAnswer[] = [];
-  const isStudent = data.personalInfo.clientType === "Student";
-
-  addAnswer(
-    answers,
-    questions,
-    questionIds.personalInfo.clientType,
-    data.personalInfo.clientType,
-  );
-  addAnswer(
-    answers,
-    questions,
-    questionIds.personalInfo.name,
-    data.personalInfo.name,
-  );
-  addAnswer(
-    answers,
-    questions,
-    questionIds.personalInfo.age,
-    data.personalInfo.age,
-  );
-  addAnswer(
-    answers,
-    questions,
-    questionIds.personalInfo.gender,
-    data.personalInfo.gender,
-  );
-  addAnswer(
-    answers,
-    questions,
-    questionIds.personalInfo.civilStatus,
-    data.personalInfo.civilStatus,
-  );
-  addAnswer(
-    answers,
-    questions,
-    questionIds.personalInfo.residence,
-    data.personalInfo.residence,
-  );
-
-  if (isStudent) {
-    addAnswer(
-      answers,
-      questions,
-      questionIds.personalInfo.course,
-      data.personalInfo.course,
-    );
-    addAnswer(
-      answers,
-      questions,
-      questionIds.personalInfo.yearLevel,
-      data.personalInfo.yearLevel,
-    );
-  }
-
-  addAnswer(
-    answers,
-    questions,
-    questionIds.personalInfo.occupation,
-    data.personalInfo.occupation,
-  );
-
-  addAnswer(answers, questions, questionIds.citizenCharter.cc1, data.cc1);
-  addAnswer(answers, questions, questionIds.citizenCharter.cc2, data.cc2);
-  addAnswer(answers, questions, questionIds.citizenCharter.cc3, data.cc3);
-
-  addAnswer(answers, questions, questionIds.services, data.services);
-
-  addAnswer(answers, questions, questionIds.comments, data.comments);
-
-  return {
-    qr_token: qrToken.trim(),
-    ticket_code: data.ticketCode.trim().toUpperCase(),
-    date: data.date,
-    time_in: data.timeIn,
-    time_out: data.timeOut,
-    answers,
-  };
+const dimensionKeyMap: Record<number, keyof ServiceQuality> = {
+  1: "satisfaction",
+  2: "responsiveness",
+  3: "communication",
+  4: "reliability",
+  5: "integrity",
+  6: "assurance",
+  7: "access",
+  8: "costs",
+  9: "outcome",
 };
 
 export const submitSurvey = async (
   data: SurveyFormData,
-  questionIds: SurveyQuestionIds,
   questions: SurveyQuestion[],
   qrToken: string,
-): Promise<void> => {
-  try {
-    const payload = buildSubmitPayload(data, questionIds, questions, qrToken);
-    await api.post("/survey/submit", payload);
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const message =
-        (error.response?.data as { message?: string } | undefined)?.message ||
-        "Submission failed, please try again.";
-      throw new Error(message);
-    }
-    throw error;
+  servicesList: SurveyQuestionOption[],
+) => {
+  const responses: any[] = [];
+
+  const addResponse = (
+    question: SurveyQuestion | undefined,
+    answerText: string | number | undefined | null,
+    serviceId?: number,
+  ) => {
+    if (
+      !question ||
+      answerText === undefined ||
+      answerText === null ||
+      answerText === ""
+    )
+      return;
+
+    const option = question.options?.find(
+      (o) =>
+        o.option_text === String(answerText) || o.name === String(answerText),
+    );
+
+    responses.push({
+      question_id: question.id,
+      option_id: option ? option.id : null,
+      text_response: option ? null : String(answerText),
+      service_id: serviceId || null,
+    });
+  };
+
+  const getQ = (sectionKeyword: string, qKeyword: string) =>
+    questions.find(
+      (q) =>
+        q.section_name.toLowerCase().includes(sectionKeyword) &&
+        q.question_text.toLowerCase().includes(qKeyword),
+    );
+
+  // 1. Map Personal Info
+  addResponse(
+    getQ("personal info", "relationship"),
+    data.personalInfo.relationship,
+  );
+  addResponse(
+    getQ("personal info", "client type"),
+    data.personalInfo.clientType,
+  );
+  addResponse(getQ("personal info", "name"), data.personalInfo.name);
+  addResponse(getQ("personal info", "age"), data.personalInfo.age);
+  addResponse(getQ("personal info", "sex"), data.personalInfo.gender);
+  addResponse(
+    getQ("personal info", "civil status"),
+    data.personalInfo.civilStatus,
+  );
+  addResponse(getQ("personal info", "residence"), data.personalInfo.residence);
+  addResponse(getQ("personal info", "course"), data.personalInfo.course);
+  addResponse(getQ("personal info", "year level"), data.personalInfo.yearLevel);
+  addResponse(
+    getQ("personal info", "occupation"),
+    data.personalInfo.occupation,
+  );
+
+  // 2. Map Citizen's Charter
+  const ccQs = questions.filter((q) =>
+    q.section_name.toLowerCase().includes("citizens charter"),
+  );
+  addResponse(
+    ccQs.find((q) => q.order === 1),
+    data.cc1,
+  );
+  addResponse(
+    ccQs.find((q) => q.order === 2),
+    data.cc2,
+  );
+  addResponse(
+    ccQs.find((q) => q.order === 3),
+    data.cc3,
+  );
+
+  // 3. Map Services Attained
+  const servicesQ = questions.find((q) =>
+    q.section_name.toLowerCase().includes("services attained"),
+  );
+  if (servicesQ && data.services.length > 0) {
+    data.services.forEach((selectedServiceName) => {
+      const opt = servicesQ.options?.find(
+        (o) =>
+          o.name === selectedServiceName ||
+          o.option_text === selectedServiceName,
+      );
+      if (opt) {
+        responses.push({
+          question_id: servicesQ.id,
+          option_id: opt.id,
+          text_response: null,
+          service_id: null,
+        });
+      }
+    });
   }
+
+  // 4. Map Service Quality Matrix
+  const qualityQs = questions.filter((q) =>
+    q.section_name.toLowerCase().includes("services quality"),
+  );
+
+  Object.entries(data.qualityMap || {}).forEach(([serviceName, ratings]) => {
+    const serviceOpt = servicesList.find(
+      (s) => s.name === serviceName || s.option_text === serviceName,
+    );
+    const serviceId = serviceOpt ? serviceOpt.id : undefined;
+
+    qualityQs.forEach((q) => {
+      const stateKey = dimensionKeyMap[q.order];
+      if (stateKey) {
+        const ratingValue = ratings[stateKey];
+        if (ratingValue !== undefined) {
+          addResponse(q, ratingValue, serviceId);
+        }
+      }
+    });
+  });
+
+  // 5. Map Comments
+  addResponse(getQ("comments", ""), data.comments);
+
+  const payload = {
+    ticket_code: data.ticketCode,
+    date: data.date,
+    time_in: data.timeIn,
+    time_out: data.timeOut,
+    office_id: data.officeId,
+    qr_token: qrToken,
+    responses: responses,
+  };
+
+  const res = await api.post("/survey/submit", payload);
+  return res.data;
 };
