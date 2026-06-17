@@ -102,7 +102,7 @@ export const ServiceQuality: React.FC<ServiceQualityProps> = ({
     setIndex((prev) => Math.max(prev - 1, 0));
   };
 
-  if (sortedQuestions.length === 0) return null; // Don't render if API has no quality questions
+  if (sortedQuestions.length === 0) return null;
 
   return (
     <fieldset className="w-full border border-gray-300 rounded-md p-2 sm:p-4">
@@ -164,7 +164,7 @@ export const ServiceQuality: React.FC<ServiceQualityProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {sortedQuestions.map((q) => {
               const stateKey = dimensionKeyMap[q.order];
-              if (!stateKey) return null; // Fallback if API sends an unexpected 10th dimension
+              if (!stateKey) return null;
 
               const isMissing = currentData?.[stateKey] === undefined;
 
@@ -220,9 +220,9 @@ export const ServiceQuality: React.FC<ServiceQualityProps> = ({
             type="button"
             onClick={prev}
             disabled={!currentService || index === 0}
-            className="border px-6 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
+            className="cursor-pointer bg-green-600 hover:bg-green-700 text-white font-medium py-3 sm:py-2 px-6 sm:px-8 rounded-md transition w-full sm:w-auto text-sm disabled:opacity-50"
           >
-            {"< Prev"}
+            Back
           </button>
 
           {!isLastService && (
@@ -230,10 +230,10 @@ export const ServiceQuality: React.FC<ServiceQualityProps> = ({
               type="button"
               onClick={next}
               disabled={!currentService}
-              className="border px-6 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
+              className="cursor-pointer bg-green-600 hover:bg-green-700 text-white font-medium py-3 sm:py-2 px-6 sm:px-8 rounded-md transition w-full sm:w-auto text-sm disabled:opacity-50"
             >
               {selectedServices[index + 1]
-                ? `${selectedServices[index + 1]} >`
+                ? `${selectedServices[index + 1]}`
                 : "Next"}
             </button>
           )}
