@@ -133,7 +133,9 @@ const addAnswer = (
         );
         return option?.option_text ?? option?.name;
       })
-      .filter((optionText): optionText is string => typeof optionText === "string");
+      .filter(
+        (optionText): optionText is string => typeof optionText === "string",
+      );
 
     if (optionTexts.length !== value.length) {
       throw new Error(
@@ -202,7 +204,6 @@ const buildSubmitPayload = (
   questionIds: SurveyQuestionIds,
   questions: SurveyQuestion[],
   qrToken: string,
-  services: Service[],
 ): SubmitSurveyPayload => {
   const answers: SurveyAnswer[] = [];
   const isStudent = data.personalInfo.clientType === "Student";
@@ -272,27 +273,6 @@ const buildSubmitPayload = (
 
   addAnswer(answers, questions, questionIds.services, data.services);
 
-  const serviceNameToId = Object.fromEntries(
-    services.map((service) => [service.name, service.id]),
-  );
-
-  data.services.forEach((serviceName) => {
-    const serviceId = serviceNameToId[serviceName];
-    const serviceQuality = data.qualityMap?.[serviceName];
-
-    if (!serviceId || !serviceQuality) {
-      return;
-    }
-
-    mapQualityAnswers(
-      answers,
-      questions,
-      serviceQuality,
-      questionIds,
-      serviceId,
-    );
-  });
-
   addAnswer(answers, questions, questionIds.comments, data.comments);
 
   return {
@@ -310,16 +290,9 @@ export const submitSurvey = async (
   questionIds: SurveyQuestionIds,
   questions: SurveyQuestion[],
   qrToken: string,
-  services: Service[],
 ): Promise<void> => {
   try {
-    const payload = buildSubmitPayload(
-      data,
-      questionIds,
-      questions,
-      qrToken,
-      services,
-    );
+    const payload = buildSubmitPayload(data, questionIds, questions, qrToken);
     await api.post("/survey/submit", payload);
   } catch (error) {
     if (axios.isAxiosError(error)) {

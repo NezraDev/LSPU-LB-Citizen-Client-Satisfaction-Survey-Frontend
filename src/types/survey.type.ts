@@ -2,24 +2,6 @@ export type ClientType = "General Public" | "Student" | "Government Employee";
 
 export type Rating = 5 | 4 | 3 | 2 | 1 | "N/A";
 
-export interface Service {
-  id: number;
-  name: string;
-  category?: string;
-}
-
-export interface SurveyQuestionOption {
-  id: number;
-  question_id: number;
-  office_id?: number | null;
-  option_text?: string;
-  name?: string;
-  category?: string;
-  order: number;
-  created_at?: string;
-  updated_at?: string;
-}
-
 export interface SurveyQuestion {
   id: number;
   question_text: string;
@@ -28,6 +10,16 @@ export interface SurveyQuestion {
   section_name: string;
   order: number;
   options: SurveyQuestionOption[];
+}
+
+export interface SurveyQuestionOption {
+  id: number;
+  question_id?: number;
+  office_id?: number;
+  option_text?: string;
+  name?: string;
+  category?: string;
+  order: number;
 }
 
 export interface SurveyQuestionIds {
@@ -66,21 +58,24 @@ export interface Office {
   id: string;
   name: string;
   qrToken?: string;
-  services: Service[];
-  questionIds?: SurveyQuestionIds;
-  questions?: SurveyQuestion[];
+}
+
+export interface SurveyResponse {
+  office: Office;
+  questions: SurveyQuestion[];
 }
 
 export interface PersonalInfo {
+  relationship?: string; // Added this
+  clientType?: string;
   name?: string;
-  age?: number;
+  age?: string;
   gender?: string;
   civilStatus?: string;
-  residence: string;
+  residence?: string;
   course?: string;
   yearLevel?: string;
   occupation?: string;
-  clientType?: ClientType;
 }
 
 export interface ServiceQuality {

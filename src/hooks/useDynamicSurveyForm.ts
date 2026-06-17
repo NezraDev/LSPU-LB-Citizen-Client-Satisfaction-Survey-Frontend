@@ -54,10 +54,8 @@ const buildQuestionIds = (questions: SurveyQuestion[]): SurveyQuestionIds => {
 const buildLegacyFormData = (
   answers: Record<number, any>,
   questionIds: SurveyQuestionIds,
-  services: Service[],
   ticketCode: string,
   officeId: string,
-  classification: string,
 ) => {
   const now = new Date();
   const getAnswer = (qid?: number) =>
@@ -74,8 +72,6 @@ const buildLegacyFormData = (
   const qualityMap: Record<string, any> = {};
   const qualityFields = questionIds.quality as Record<string, number>;
   for (const serviceName of selectedServiceNames) {
-    const service = services.find((s) => s.name === serviceName);
-    if (!service) continue;
     const quality: any = {};
     for (const [field, qid] of Object.entries(qualityFields)) {
       const ans = answers[qid];
@@ -101,8 +97,7 @@ const buildLegacyFormData = (
       course: getAnswer(questionIds.personalInfo.course) || "",
       yearLevel: getAnswer(questionIds.personalInfo.yearLevel) || "",
       occupation: getAnswer(questionIds.personalInfo.occupation) || "",
-      clientType:
-        getAnswer(questionIds.personalInfo.clientType) || classification,
+      clientType: getAnswer(questionIds.personalInfo.clientType),
     },
     cc1: getAnswer(questionIds.citizenCharter.cc1) || "",
     cc2: getAnswer(questionIds.citizenCharter.cc2) || "",
@@ -116,9 +111,7 @@ const buildLegacyFormData = (
 
 export const useDynamicSurveyForm = (
   questions: SurveyQuestion[],
-  services: Service[],
   qrToken: string,
-  classification: string,
 ) => {
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [errors, setErrors] = useState<Record<number, string | undefined>>({});
@@ -180,13 +173,11 @@ export const useDynamicSurveyForm = (
       const formData = buildLegacyFormData(
         answers,
         questionIds,
-        services,
         ticketCode,
         "office-id-placeholder",
-        classification,
       );
 
-      await submitSurvey(formData, questionIds, questions, qrToken, services);
+      await submitSurvey(formData, questionIds, questions, qrToken);
       setIsSuccessOpen(true);
     } catch (err: any) {
       setSubmitError(err.message);

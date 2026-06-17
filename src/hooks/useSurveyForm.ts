@@ -4,7 +4,7 @@ import { formatDate, formatTime12Hour } from "../utils/dateUtils";
 import { validateSurveyForm, CC1_OPTION_NA } from "../utils/validationUtils";
 import type {
   SurveyFormData,
-  Office,
+  SurveyQuestion,
   PersonalInfo,
   ServiceQuality,
   FormErrors,
@@ -49,14 +49,29 @@ const getInitialFormData = (officeId: string): SurveyFormData => {
   };
 };
 
-export const useSurveyForm = (office: Office, qrToken: string) => {
-  const [formData, setFormData] = useState<SurveyFormData>(() =>
-    getInitialFormData(office.id),
+// 1. Updated signature to expect questions array instead of the old Office object
+export const useSurveyForm = (questions: SurveyQuestion[], qrToken: string) => {
+  // 2. Dynamically extract the services and the office ID from the API response
+  const servicesQuestion = questions.find(
+    (q) => q.section_name.toLowerCase() === "services attained",
   );
+  const servicesList = servicesQuestion?.options || [];
+
+  // Since the API puts 'office_id' on the service options, we can extract it here
+  const extractedOfficeId =
+    servicesList.length > 0 && "office_id" in servicesList[0]
+      ? String((servicesList[0] as any).office_id)
+      : "";
+
+  const [formData, setFormData] = useState<SurveyFormData>(() =>
+    getInitialFormData(extractedOfficeId),
+  );
+
   const [errors, setErrors] = useState<FormErrors>({
     personalInfo: {},
     quality: {},
   });
+
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -194,17 +209,13 @@ export const useSurveyForm = (office: Office, qrToken: string) => {
     setSubmitting(true);
 
     try {
-      if (!office.questionIds || !office.questions) {
+      if (!questions || questions.length === 0) {
         throw new Error("Survey configuration is unavailable for this office.");
       }
 
-      await submitSurvey(
-        submitData,
-        office.questionIds,
-        office.questions,
-        qrToken,
-        office.services,
-      );
+      // 3. Adjusted the submission payload
+      await submitSurvey(submitData, questions, qrToken, servicesList);
+
       setIsSuccessOpen(true);
     } catch (error) {
       setSubmitError(
